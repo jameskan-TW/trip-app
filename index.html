@@ -144,6 +144,31 @@
     #tab-checklist { padding: 0; }
     #tab-checklist-content { padding: 12px 16px 24px; }
 
+
+    /* ─── Help Cards ──────────────────────────────────────── */
+    .help-card {
+      background: linear-gradient(135deg, #fff5f8 0%, #ffeef3 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .help-card-title {
+      font-size: 13px; font-weight: 700; color: var(--pink);
+      margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .help-card-body {
+      font-size: 12px; color: var(--text-2); line-height: 1.7;
+    }
+    .help-card-body li { margin-left: 14px; }
+    .help-dismiss {
+      position: absolute; top: 10px; right: 12px;
+      background: none; border: none; font-size: 16px;
+      color: var(--text-3); cursor: pointer; padding: 0; line-height: 1;
+    }
+    .help-card.hidden { display: none; }
+
     /* ─── Checklist Sub-tabs ──────────────────────────── */
     .checklist-tabs {
       display: flex; gap: 6px;
@@ -1154,14 +1179,13 @@ const RESTAURANTS = {
 // ⚠️  請填入你的 Firebase 設定，設定好後才能使用集合通知功能
 // 設定方式請見 app 內「集合」tab 的說明
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyDVjVsI6HLjhPLOKOL9Wjx9T4doyf0KjOw",
-  authDomain:        "y3tokyo2026.firebaseapp.com",
-  databaseURL:       "https://y3tokyo2026-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:         "y3tokyo2026",
-  storageBucket:     "y3tokyo2026.firebasestorage.app",
-  messagingSenderId: "740996060059",
-  appId:             "1:740996060059:web:c7decd871dd126d4eb073e",
-  measurementId:     "G-K8S5SG4LHF"
+  apiKey:            "AIzaSyBpJo9hk99YtRpG9U2MABvE5DwRauDvMpY",
+  authDomain:        "aomori-travel-988ca.firebaseapp.com",
+  databaseURL:       "https://aomori-travel-988ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "aomori-travel-988ca",
+  storageBucket:     "aomori-travel-988ca.firebasestorage.app",
+  messagingSenderId: "537309666939",
+  appId:             "1:537309666939:web:01ee117d702162e6130cde"
 };
 const DB_PATH  = "tokyo2026disney/meeting";
 const MSG_PATH = "tokyo2026disney/messages";
@@ -1462,6 +1486,23 @@ function isPast(ds) {
 }
 
 // ─── Tab Switching ────────────────────────────────────────────────
+
+
+function dismissHelp(key) {
+  localStorage.setItem('help-dismissed-' + key, '1');
+  const el = document.getElementById('help-' + key);
+  if (el) el.classList.add('hidden');
+}
+function helpCard(key, title, items) {
+  const dismissed = localStorage.getItem('help-dismissed-' + key);
+  if (dismissed) return '';
+  const listHtml = items.map(i => `<li>${i}</li>`).join('');
+  return `<div class="help-card" id="help-${key}">
+    <div class="help-card-title">${title}</div>
+    <div class="help-card-body"><ul>${listHtml}</ul></div>
+    <button class="help-dismiss" onclick="dismissHelp('${key}')" title="關閉說明">×</button>
+  </div>`;
+}
 
 function switchTab(tab) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -1799,7 +1840,13 @@ function renderItinerary() {
     </div>
     <div class="weather-dots" id="weather-dots"></div>
   </div>`;
-  document.getElementById("tab-itinerary").innerHTML = weatherHtml + html;
+  const itineraryHelp = helpCard('itinerary', '🗓️ 行程 — 怎麼用', [
+    '點每一天的卡片可以展開/收起詳細行程',
+    '活動旁的 📍 可以直接開啟 Google 地圖導航',
+    '今天的行程會自動標記為粉紅色',
+    '頂部天氣預報每次開啟自動更新'
+  ]);
+  document.getElementById("tab-itinerary").innerHTML = itineraryHelp + weatherHtml + html;
   loadWeatherStrip();
   scrollToTodayCard();
 }
@@ -1808,12 +1855,18 @@ function renderItinerary() {
 
 function renderChecklist() {
   const p = checklistSubTab === "packing";
-  document.getElementById("tab-checklist").innerHTML = `
+  const checkHelp = helpCard('checklist', '📋 清單 — 怎麼用', [
+    '【🎒 打包】出發前逐項打勾確認，避免忘帶東西',
+    '【🛍️ 購物】記錄想買的伴手禮，買了就打勾',
+    '右下角 ＋ 可以自行新增項目',
+    '打勾紀錄存在你自己的手機，不影響他人'
+  ]);
+  document.getElementById("tab-checklist").innerHTML = checkHelp + \`
     <div class="checklist-tabs">
-      <button class="checklist-tab-btn ${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
-      <button class="checklist-tab-btn ${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
+      <button class="checklist-tab-btn \${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
+      <button class="checklist-tab-btn \${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
     </div>
-    <div id="tab-checklist-content"></div>`;
+    <div id="tab-checklist-content"></div>\`;
   if (p) renderPacking(); else renderShopping();
 }
 
@@ -2331,7 +2384,13 @@ function renderMessages() {
   const el = document.getElementById("tab-messages");
   if (!el) return;
 
-  let html = `<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>`;
+  const msgHelp = helpCard('messages', '💬 留言 — 怎麼用', [
+    '點「＋ 新增留言」可以留下旅途中的感受或紀錄',
+    '選擇是哪一天的留言，並輸入你的名字',
+    '所有人的留言即時同步，大家都看得到',
+    '長按留言可以編輯或刪除（限本人）'
+  ]);
+  let html = msgHelp + \`<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>\`;
 
   if (allMessages.length === 0) {
     html += `
@@ -2478,11 +2537,17 @@ function renderExpenses() {
   if (!el) return;
   if (expShowSettle) { renderSettlement(el); return; }
 
-  let html = `
+  const expHelp = helpCard('expenses', '💰 記帳 — 怎麼用', [
+    '點「＋ 新增記帳」輸入花費金額、付款人、誰要分攤',
+    '支援日圓（JPY）與台幣（TWD）自動換算',
+    '點「🧮 結算」可以看每個人應付/應收多少',
+    '記帳資料即時同步，全員可見'
+  ]);
+  let html = expHelp + \`
     <div class="exp-top-row">
       <button class="exp-add-btn" onclick="showExpForm()">＋ 新增記帳</button>
       <button class="exp-settle-btn" onclick="expShowSettle=true;renderExpenses()">🧮 結算</button>
-    </div>`;
+    </div>\`;
 
   if (allExpenses.length === 0) {
     if (!firebaseReady) {
