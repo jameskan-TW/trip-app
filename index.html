@@ -1,0 +1,2848 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#c94b72">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="東北賞櫻">
+  <title>東北賞櫻之旅 2026</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --pink:       #c94b72;
+      --pink-2:     #e06a8a;
+      --pink-3:     #f5a3ba;
+      --pink-bg:    #fff5f8;
+      --pink-pale:  #ffeef3;
+      --white:      #ffffff;
+      --text:       #1e0d12;
+      --text-2:     #5c3347;
+      --text-3:     #9a7080;
+      --border:     #f0d4dc;
+      --green:      #3d8a60;
+      --amber:      #f59e0b;
+      --nav-h:      60px;
+    }
+
+    html { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC",
+        "Hiragino Kaku Gothic ProN", "Noto Sans CJK TC", sans-serif;
+      background: var(--pink-bg);
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Header ─────────────────────────────────────── */
+    .header {
+      position: fixed;
+      inset: 0 0 auto 0;
+      padding-top: env(safe-area-inset-top, 0px);
+      background: linear-gradient(145deg, #c94b72 0%, #e06a8a 55%, #f5a3ba 100%);
+      color: white;
+      z-index: 100;
+    }
+    .header-inner { padding: 14px 20px 18px; }
+    .header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .trip-title  { font-size: 21px; font-weight: 800; letter-spacing: 0.02em; line-height: 1.2; }
+    .trip-sub    { font-size: 12px; opacity: 0.85; margin-top: 3px; letter-spacing: 0.04em; }
+    .countdown {
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(6px);
+      border-radius: 14px;
+      padding: 8px 14px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .cd-num   { font-size: 26px; font-weight: 900; line-height: 1; }
+    .cd-label { font-size: 10px; opacity: 0.9; margin-top: 2px; }
+    .header-pills { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .pill {
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 4px 11px;
+      font-size: 12px;
+    }
+
+    /* ─── Meeting Banner ──────────────────────────────── */
+    .meeting-banner {
+      display: none;
+      position: fixed;
+      left: 0; right: 0;
+      z-index: 99;
+      background: linear-gradient(90deg, #f59e0b, #f97316);
+      color: white;
+      padding: 10px 16px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .meeting-banner.visible { display: block; }
+    .mb-inner { display: flex; align-items: center; gap: 10px; }
+    .mb-icon  { font-size: 22px; flex-shrink: 0; }
+    .mb-info  { flex: 1; min-width: 0; }
+    .mb-countdown { font-size: 20px; font-weight: 900; line-height: 1; letter-spacing: 0.03em; }
+    .mb-sub   { font-size: 12px; opacity: 0.9; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mb-past  { font-size: 13px; font-weight: 700; }
+    @keyframes alarm-flash {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+    .meeting-banner.alarm-flash { animation: alarm-flash 0.45s ease-in-out 8; }
+
+    /* ─── Bottom Nav ──────────────────────────────────── */
+    .bottom-nav {
+      position: fixed;
+      inset: auto 0 0 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(201,75,114,0.09);
+    }
+    .nav-btn {
+      flex: 1; border: none; background: none;
+      padding: 10px 0 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; color: var(--text-3); font-size: 10px; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.15s;
+      position: relative;
+    }
+    .nav-btn.active { color: var(--pink); }
+    .nav-btn.meeting-active { color: var(--amber); }
+    .nav-icon { width: 24px; height: 24px; display: block; transition: transform 0.15s; }
+    .nav-btn.active .nav-icon { transform: scale(1.1); }
+    .nav-dot {
+      position: absolute; top: 8px; right: calc(50% - 14px);
+      width: 8px; height: 8px;
+      background: #ef4444; border-radius: 50%;
+      border: 2px solid white;
+      display: none;
+    }
+    .nav-dot.visible { display: block; }
+
+    /* ─── Scroll Content ──────────────────────────────── */
+    .content {
+      position: fixed;
+      inset: 0;
+      padding-top: 130px; /* updated by adjustLayout */
+      padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-panel { display: none; padding: 12px 16px 24px; }
+    .tab-panel.active { display: block; }
+    #tab-checklist { padding: 0; }
+    #tab-checklist-content { padding: 12px 16px 24px; }
+
+    /* ─── Checklist Sub-tabs ──────────────────────────── */
+    .checklist-tabs {
+      display: flex; gap: 6px;
+      padding: 14px 16px 10px; background: var(--bg);
+    }
+    .checklist-tab-btn {
+      flex: 1; padding: 10px 0; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: background .15s, color .15s;
+      background: var(--pink-pale); color: var(--text-3);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .checklist-tab-btn.active { background: var(--pink); color: #fff; }
+    .checklist-tab-btn:active { opacity: .8; }
+
+    /* ─── Section Title ───────────────────────────────── */
+    .sec-title {
+      font-size: 13px; font-weight: 700; color: var(--text-2);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin: 20px 0 8px;
+    }
+    .sec-title:first-child { margin-top: 0; }
+
+    /* ─── Day Cards ───────────────────────────────────── */
+    .day-card {
+      background: white; border-radius: 18px;
+      margin-bottom: 10px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(201,75,114,0.09);
+    }
+    .day-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent; user-select: none;
+    }
+    .day-badge {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: var(--pink-pale);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .day-badge.is-today { background: var(--pink); }
+    .day-badge.is-past  { background: var(--border); }
+    .day-num  { font-size: 10px; font-weight: 700; color: var(--pink); line-height: 1; }
+    .day-date { font-size: 17px; font-weight: 900; color: var(--pink); line-height: 1.1; }
+    .day-badge.is-today .day-num, .day-badge.is-today .day-date { color: white; }
+    .day-badge.is-past  .day-num, .day-badge.is-past  .day-date { color: var(--text-3); }
+    .day-info { flex: 1; min-width: 0; }
+    .day-theme { font-size: 15px; font-weight: 700; line-height: 1.3; }
+    .day-meta  { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+    .day-emoji   { font-size: 22px; flex-shrink: 0; }
+    .day-chevron {
+      width: 20px; height: 20px; color: var(--text-3);
+      transition: transform 0.25s ease; flex-shrink: 0;
+    }
+    .day-card.open .day-chevron { transform: rotate(180deg); }
+    .day-card.is-past { opacity: 0.55; }
+    .day-card.is-past .day-theme { color: var(--text-3); }
+    .day-card.is-past .day-meta  { color: var(--text-3); }
+    .day-header:active { background: rgba(201,75,114,0.06); border-radius: 18px 18px 0 0; }
+    .day-body {
+      overflow: hidden; max-height: 0;
+      transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1);
+      border-top: 1px solid transparent;
+    }
+    .day-card.open .day-body { max-height: 2000px; border-top-color: var(--border); }
+    .act-list { padding: 4px 16px 4px; }
+    .act-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid #f8f0f3;
+    }
+    .act-item:last-child { border-bottom: none; }
+    .act-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .act-info { flex: 1; min-width: 0; }
+    .act-name { font-size: 14px; font-weight: 600; }
+    .act-sub  { font-size: 12px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+    .act-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; margin-top: 1px; }
+    .time-tag {
+      font-size: 11px; font-weight: 700; color: var(--pink);
+      background: var(--pink-pale); border-radius: 6px; padding: 2px 8px; white-space: nowrap;
+    }
+    .map-btn {
+      display: flex; align-items: center; gap: 3px;
+      background: var(--pink-pale); color: var(--pink);
+      border: none; border-radius: 8px;
+      padding: 0 10px; min-height: 44px; font-size: 12px; font-weight: 600;
+      font-family: inherit; cursor: pointer; text-decoration: none; white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .day-hotel {
+      margin: 0 16px 14px; background: var(--pink-bg);
+      border-radius: 10px; padding: 10px 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .day-hotel-info { flex: 1; min-width: 0; }
+    .day-hotel-name { font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .day-hotel-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; flex-wrap: wrap; }
+    .day-hotel-note { font-size: 11px; color: var(--text-3); }
+    .hotel-paid-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 600;
+      border-radius: 5px; padding: 1px 6px;
+    }
+    .hotel-paid-badge.paid   { color: #15803d; background: #dcfce7; }
+    .hotel-paid-badge.unpaid { color: #92400e; background: #fef3c7; }
+
+    /* ─── Weather Strip ──────────────────────────────── */
+    .weather-strip-wrap {
+      margin: 10px 0 4px;
+    }
+    .weather-strip-title {
+      font-size: 11px; color: var(--text-3); font-weight: 600;
+      letter-spacing: .04em; margin-bottom: 8px; padding: 0 16px;
+    }
+    .weather-strip {
+      display: flex; gap: 10px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 16px 6px;
+      scrollbar-width: none;
+    }
+    .weather-strip::-webkit-scrollbar { display: none; }
+    .weather-day-card {
+      flex: 0 0 72%;
+      scroll-snap-align: start;
+      background: linear-gradient(150deg,#e0f2fe 0%,#f0fdf4 100%);
+      border: 1.5px solid #bae6fd; border-radius: 14px;
+      padding: 12px 14px 10px; text-align: center;
+      transition: opacity .2s;
+    }
+    .weather-day-card.is-today    { flex: 0 0 78%; border-color: #38bdf8; background: linear-gradient(150deg,#bae6fd 0%,#dcfce7 100%); }
+    .weather-day-card.is-tomorrow { flex: 0 0 75%; border-color: #7dd3fc; }
+    .weather-day-card.is-past     { flex: 0 0 58%; opacity: 0.55; filter: grayscale(20%); }
+    .wdc-label { font-size: 13px; color: var(--text-2); font-weight: 700; margin-bottom: 4px; }
+    .wdc-row {
+      display: flex; align-items: center; gap: 5px;
+      justify-content: center; margin-top: 5px;
+    }
+    .wdc-row + .wdc-row { border-top: 1px solid rgba(0,0,0,.07); padding-top: 5px; }
+    .wdc-row:only-child { flex-direction: column; gap: 2px; }
+    .wdc-icon-sm { font-size: 20px; line-height: 1; }
+    .wdc-row:only-child .wdc-icon-sm { font-size: 34px; margin: 4px 0; }
+    .wdc-loc  { font-size: 11px; color: var(--text-2); font-weight: 600; }
+    .wdc-temp { font-size: 14px; font-weight: 800; color: var(--text-1); }
+    .wdc-row:only-child .wdc-temp { font-size: 18px; }
+    .wdc-rain { font-size: 12px; color: #0369a1; }
+    .wdc-row:only-child .wdc-rain { font-size: 13px; margin-top: 2px; }
+    .weather-loading { font-size: 12px; color: var(--text-3); padding: 10px 2px; }
+    /* shimmer */
+    @keyframes shimmer {
+      0%   { background-position: -400px 0; }
+      100% { background-position:  400px 0; }
+    }
+    .weather-shimmer {
+      flex: 0 0 72%; border-radius: 14px; height: 110px;
+      background: linear-gradient(90deg, #e8f4fd 25%, #d0eaf8 50%, #e8f4fd 75%);
+      background-size: 800px 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+    /* dots */
+    .weather-dots {
+      display: flex; justify-content: center; gap: 6px;
+      padding: 8px 16px 2px;
+    }
+    .weather-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #bae6fd; transition: background .2s, transform .2s;
+    }
+    .weather-dot.active { background: #38bdf8; transform: scale(1.3); }
+
+    /* ─── Parking Section ─────────────────────────────── */
+    .parking-section {
+      margin: 0 16px 14px;
+      background: #eff6ff;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .parking-header {
+      font-size: 12px; font-weight: 700; color: #1d4ed8;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .parking-lot {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 1px solid #dbeafe;
+    }
+    .parking-lot:last-of-type { border-bottom: none; }
+    .parking-lot.warn { opacity: 0.6; }
+    .parking-left { flex: 1; min-width: 0; }
+    .parking-name { font-size: 13px; font-weight: 600; color: #1e3a5f; }
+    .parking-note { font-size: 11px; color: #64748b; margin-top: 2px; line-height: 1.4; }
+    .parking-search-btn {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      width: 100%; margin-top: 10px;
+      background: #1d4ed8; color: white;
+      border: none; border-radius: 8px;
+      padding: 10px; font-size: 13px; font-weight: 700;
+      font-family: inherit; cursor: pointer; text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .parking-search-btn:active { opacity: 0.85; }
+
+    /* ─── Restaurant Section ──────────────────────────── */
+    .restaurant-section {
+      margin: 0 16px 14px;
+      background: #fff7ed;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .restaurant-header {
+      font-size: 12px; font-weight: 700; color: #c2410c;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .restaurant-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 1px solid #fed7aa;
+    }
+    .restaurant-item:last-child { border-bottom: none; }
+    .restaurant-left { flex: 1; min-width: 0; }
+    .restaurant-name { font-size: 13px; font-weight: 600; color: #7c2d12; }
+    .restaurant-note { font-size: 11px; color: #9a6a50; margin-top: 2px; line-height: 1.4; }
+
+    /* ─── Flights & Hotels ────────────────────────────── */
+    .flight-card {
+      background: white; border-radius: 16px;
+      padding: 16px; margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(201,75,114,0.08);
+    }
+    .flight-label { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+    .flight-row { display: flex; align-items: center; justify-content: space-between; }
+    .f-port.right { text-align: right; }
+    .f-code { font-size: 28px; font-weight: 900; color: var(--text); }
+    .f-city { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .f-time { font-size: 20px; font-weight: 700; color: var(--pink); margin-top: 5px; }
+    .f-mid  { text-align: center; flex: 1; padding: 0 10px; }
+    .f-num  { font-size: 11px; font-weight: 600; color: var(--text-3); }
+    .f-plane { font-size: 22px; margin: 4px 0; }
+    .hotel-card {
+      background: white; border-radius: 16px;
+      padding: 16px; margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(201,75,114,0.08);
+    }
+    .hotel-nights { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .night-badge {
+      font-size: 11px; font-weight: 700; color: white;
+      background: var(--pink-2); border-radius: 6px; padding: 3px 8px;
+    }
+    .night-badge.dark { background: var(--text-2); }
+    .hotel-name { font-size: 15px; font-weight: 700; }
+    .hotel-loc  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .hotel-pay  { font-size: 12px; color: var(--text-3); margin-top: 6px; }
+    .hotel-pay.paid { color: var(--green); font-weight: 600; }
+    .hotel-row  { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+
+    /* ─── Members & Notes ─────────────────────────────── */
+    .member-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .member-card {
+      background: white; border-radius: 14px;
+      padding: 12px; display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 2px 8px rgba(201,75,114,0.07);
+    }
+    .m-avatar {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--pink-pale), var(--pink-3));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .m-name { font-size: 14px; font-weight: 700; }
+    .note-item {
+      background: white; border-radius: 12px;
+      padding: 12px 14px; margin-bottom: 7px;
+      display: flex; align-items: flex-start; gap: 10px;
+      box-shadow: 0 1px 6px rgba(201,75,114,0.06);
+      font-size: 13px; line-height: 1.6;
+    }
+    .note-icon { flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+    .check-list { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .check-item {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border-radius: 12px; padding: 11px 12px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 1px 6px rgba(201,75,114,0.06);
+    }
+    .check-item.checked { opacity: 0.6; }
+    .check-box {
+      width: 22px; height: 22px; flex-shrink: 0;
+      border-radius: 6px; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .check-item.checked .check-box { background: var(--green); border-color: var(--green); }
+    .check-mark { display: none; color: white; font-size: 13px; font-weight: 700; }
+    .check-item.checked .check-mark { display: block; }
+    .check-item.checked .check-label { text-decoration: line-through; }
+    .check-label { font-size: 13px; line-height: 1.3; }
+
+    /* ─── Custom / Shopping Items ─────────────────────── */
+    .list-item {
+      display: flex; align-items: center; gap: 8px;
+      background: white; border-radius: 12px; padding: 11px 12px;
+      margin-bottom: 6px;
+      box-shadow: 0 1px 6px rgba(201,75,114,0.06);
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .list-item.done { opacity: 0.55; }
+    .list-item.done .list-label { text-decoration: line-through; }
+    .list-label { flex: 1; font-size: 14px; color: var(--text); }
+    .list-check {
+      width: 22px; height: 22px; flex-shrink: 0;
+      border-radius: 6px; border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .list-item.done .list-check { background: var(--green); border-color: var(--green); }
+    .list-check-mark { display: none; color: white; font-size: 12px; font-weight: 800; }
+    .list-item.done .list-check-mark { display: block; }
+    .del-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: none; border-radius: 7px;
+      background: #fee2e2; color: #dc2626;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .add-row {
+      display: flex; gap: 8px; margin-top: 8px;
+    }
+    .add-row input {
+      flex: 1; padding: 11px 12px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 15px; font-family: inherit; color: var(--text);
+      background: white; outline: none;
+    }
+    .add-row input:focus { border-color: var(--pink); }
+    .add-row-btn {
+      border: none; border-radius: 10px;
+      background: var(--pink); color: white;
+      padding: 11px 16px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .add-trigger {
+      width: 100%; margin-top: 8px;
+      border: 1.5px dashed var(--border); border-radius: 12px;
+      background: white; color: var(--text-3);
+      padding: 12px; font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ─── Shopping: Photos & Location ─────────────────── */
+    .shop-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .shop-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; align-self: flex-start; }
+    .shop-location { font-size: 11px; color: var(--text-3); }
+    .shop-photos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .shop-thumb-wrap { position: relative; width: 60px; height: 60px; flex-shrink: 0; }
+    .shop-thumb {
+      width: 60px; height: 60px; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border); cursor: pointer; display: block;
+    }
+    .shop-thumb-del {
+      position: absolute; top: -5px; right: -5px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(0,0,0,.6); color: white; border: none;
+      font-size: 10px; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .shop-photo-add {
+      width: 60px; height: 60px; border-radius: 8px;
+      border: 1.5px dashed var(--border); background: var(--pink-pale);
+      font-size: 22px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-family: inherit;
+    }
+    .shop-photo-add-inline {
+      font-size: 11px; color: var(--text-3); background: none; border: none;
+      cursor: pointer; padding: 1px 0; font-family: inherit; text-align: left;
+    }
+    .add-row-col { flex-direction: column; gap: 6px; }
+    .add-row-col input { width: 100%; box-sizing: border-box; }
+    .add-row-buttons { display: flex; gap: 8px; }
+    /* Photo full-screen viewer */
+    .photo-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.88);
+      z-index: 9999; display: flex; align-items: center; justify-content: center;
+    }
+    .photo-overlay img { max-width: 95vw; max-height: 85vh; border-radius: 10px; object-fit: contain; }
+    .photo-overlay-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.18); border: none; color: white;
+      font-size: 20px; cursor: pointer; font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ─── Meeting Tab ─────────────────────────────────── */
+
+    /* Empty state */
+    .meeting-empty {
+      text-align: center;
+      padding: 48px 24px 32px;
+    }
+    .meeting-empty-icon { font-size: 64px; line-height: 1; margin-bottom: 12px; }
+    .meeting-empty-text { font-size: 16px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .meeting-empty-sub  { font-size: 13px; color: var(--text-3); }
+
+    /* Active meeting display */
+    .meeting-active-card {
+      background: linear-gradient(135deg, #fffbeb, #fff7ed);
+      border: 1.5px solid #fcd34d;
+      border-radius: 20px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .meeting-label { font-size: 13px; font-weight: 700; color: #92400e; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+    .meeting-clock {
+      font-size: 52px; font-weight: 900;
+      color: #d97706; letter-spacing: 0.04em;
+      line-height: 1; font-variant-numeric: tabular-nums;
+      margin-bottom: 6px;
+    }
+    .meeting-clock.passed { color: var(--text-3); font-size: 28px; }
+    .meeting-time-row {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      font-size: 14px; font-weight: 700; color: #92400e; margin-bottom: 8px;
+    }
+    .meeting-msg  { font-size: 15px; color: var(--text-2); margin-bottom: 8px; line-height: 1.5; }
+    .meeting-by   { font-size: 12px; color: var(--text-3); }
+
+    /* Form */
+    .meeting-form-card {
+      background: white; border-radius: 18px;
+      padding: 20px 16px; margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(201,75,114,0.09);
+    }
+    .form-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+    .form-row   { margin-bottom: 14px; }
+    .form-label { font-size: 12px; font-weight: 700; color: var(--text-2); margin-bottom: 6px; letter-spacing: 0.04em; }
+    .form-input {
+      width: 100%; padding: 12px 14px;
+      border: 1.5px solid var(--border); border-radius: 12px;
+      font-size: 16px; font-family: inherit; color: var(--text);
+      background: white; outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--amber); }
+    .form-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* Buttons */
+    .btn {
+      border: none; border-radius: 12px;
+      padding: 13px 18px; font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-primary {
+      flex: 1; background: var(--amber); color: white;
+    }
+    .btn-outline {
+      background: white; color: var(--text-2);
+      border: 1.5px solid var(--border);
+    }
+    .btn-danger {
+      background: #fee2e2; color: #dc2626;
+    }
+    .btn-pink {
+      flex: 1; background: var(--pink); color: white;
+    }
+
+    /* Action row below active meeting */
+    .meeting-actions { display: flex; gap: 8px; }
+
+    /* Firebase setup instructions */
+    .setup-card {
+      background: white; border-radius: 18px;
+      padding: 20px; margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(201,75,114,0.09);
+    }
+    .setup-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+    .setup-sub   { font-size: 13px; color: var(--text-3); margin-bottom: 18px; line-height: 1.5; }
+    .setup-step  {
+      display: flex; gap: 12px; align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--pink); color: white;
+      font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step-text { font-size: 13px; line-height: 1.6; color: var(--text-2); }
+    .step-text a { color: var(--pink); text-decoration: none; font-weight: 600; }
+    .step-code {
+      font-family: monospace; font-size: 12px;
+      background: var(--pink-bg); border-radius: 6px;
+      padding: 8px 10px; margin-top: 6px;
+      color: var(--text-2); line-height: 1.7;
+      white-space: pre-wrap; word-break: break-all;
+    }
+
+    /* ─── Messages Tab ─────────────────────────────────── */
+    .msg-add-btn {
+      width: 100%; margin-bottom: 16px;
+      background: var(--pink); color: white;
+      border: none; border-radius: 14px;
+      padding: 15px; font-size: 16px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 3px 12px rgba(201,75,114,0.3);
+    }
+    .msg-add-btn:active { opacity: 0.85; }
+
+    .msg-day-group { margin-bottom: 20px; }
+    .msg-day-label {
+      font-size: 12px; font-weight: 700; color: var(--text-3);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .msg-day-label::before, .msg-day-label::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
+    }
+    .msg-card {
+      background: white; border-radius: 14px;
+      padding: 14px 16px; margin-bottom: 7px;
+      box-shadow: 0 2px 8px rgba(201,75,114,0.08);
+    }
+    .msg-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .msg-avatar {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--pink-pale), var(--pink-3));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .msg-name { font-size: 15px; font-weight: 700; flex: 1; }
+    .msg-time { font-size: 11px; color: var(--text-3); }
+    .msg-text { font-size: 15px; line-height: 1.65; color: var(--text); }
+
+    .msg-empty {
+      text-align: center;
+      padding: 48px 24px 32px;
+    }
+    .msg-empty-icon { font-size: 60px; line-height: 1; margin-bottom: 12px; }
+    .msg-empty-text { font-size: 16px; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
+    .msg-empty-sub  { font-size: 13px; color: var(--text-3); }
+
+    /* Message Form Overlay */
+    .msg-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: flex-end;
+    }
+    .msg-overlay.visible { display: flex; }
+    .msg-form-sheet {
+      background: white;
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px;
+      padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .msg-form-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .msg-form-title { font-size: 18px; font-weight: 800; color: var(--text); }
+    .msg-close-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--pink-bg); border: none;
+      font-size: 16px; color: var(--text-3);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Day picker pills */
+    .day-picker { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; }
+    .day-picker::-webkit-scrollbar { display: none; }
+    .day-pill {
+      flex-shrink: 0;
+      padding: 8px 13px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: white; color: var(--text-2);
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .day-pill.selected { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* Member picker */
+    .member-picker { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .member-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border-radius: 10px; border: 1.5px solid var(--border);
+      background: white; color: var(--text-2);
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .member-pill.selected { background: var(--pink); color: white; border-color: var(--pink); }
+
+    /* ─── Day Transport Mini Card ───────────────────────── */
+    .day-transport-card {
+      margin: 0 16px 14px;
+      border-radius: 10px;
+      padding: 11px 12px;
+    }
+    .dtc-flight { background: linear-gradient(135deg, #eef2ff, #e0e7ff); }
+    .dtc-car    { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+    .dtc-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; margin-bottom: 7px;
+    }
+    .dtc-flight .dtc-label { color: #4338ca; }
+    .dtc-car    .dtc-label { color: #15803d; }
+    .dtc-flight-row { display: flex; align-items: center; }
+    .dtc-port { text-align: center; }
+    .dtc-code { font-size: 19px; font-weight: 900; color: #1e3a5f; }
+    .dtc-city { font-size: 10px; color: #64748b; }
+    .dtc-time { font-size: 14px; font-weight: 700; color: #4338ca; margin-top: 2px; }
+    .dtc-mid  { flex: 1; text-align: center; padding: 0 6px; }
+    .dtc-num  { font-size: 11px; color: #64748b; }
+    .dtc-arrow { font-size: 16px; margin: 2px 0; }
+    .dtc-car-text { font-size: 13px; font-weight: 600; color: #15803d; }
+    .dtc-car-sub  { font-size: 11px; color: #16a34a; margin-top: 3px; line-height: 1.5; }
+
+    /* ─── Font Size ─────────────────────────────────────── */
+    html[data-zoom="lg"] { zoom: 1.2; }
+    html[data-zoom="xl"] { zoom: 1.4; }
+
+    .header-font-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+    }
+    .hdr-font-label { font-size: 11px; opacity: 0.8; color: white; }
+    .hdr-font-btn {
+      border: none; border-radius: 7px;
+      background: rgba(255,255,255,0.18); color: white;
+      padding: 4px 11px; font-size: 12px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+    }
+    .hdr-font-btn.active { background: rgba(255,255,255,0.48); }
+
+    /* ─── Expenses Tab ──────────────────────────────────── */
+    .exp-top-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .exp-add-btn {
+      flex: 2; background: var(--pink); color: white;
+      border: none; border-radius: 14px;
+      padding: 14px; font-size: 15px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 3px 12px rgba(201,75,114,0.3);
+    }
+    .exp-add-btn:active { opacity: 0.85; }
+    .exp-settle-btn {
+      flex: 1; background: white; color: var(--pink);
+      border: 1.5px solid var(--pink); border-radius: 14px;
+      padding: 14px; font-size: 15px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .exp-settle-btn.active { background: var(--pink); color: white; }
+
+    .exp-currency-header {
+      font-size: 12px; font-weight: 700; color: var(--text-2);
+      letter-spacing: 0.06em; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .exp-currency-header::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    .exp-card {
+      background: white; border-radius: 14px;
+      padding: 13px 15px; margin-bottom: 7px;
+      box-shadow: 0 2px 8px rgba(201,75,114,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .exp-card-left { flex: 1; min-width: 0; }
+    .exp-payer { font-size: 15px; font-weight: 700; color: var(--text); }
+    .exp-for   { font-size: 12px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+    .exp-note  { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+    .exp-amount { font-size: 18px; font-weight: 900; color: var(--pink); white-space: nowrap; text-align: right; }
+    .exp-del-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: none; border-radius: 7px;
+      background: #fee2e2; color: #dc2626;
+      font-size: 13px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .settle-card {
+      background: white; border-radius: 16px;
+      padding: 20px 18px; margin-bottom: 12px;
+      box-shadow: 0 2px 12px rgba(201,75,114,0.09);
+    }
+    .settle-title {
+      font-size: 13px; font-weight: 700; color: var(--text-2);
+      letter-spacing: 0.06em; margin-bottom: 12px;
+    }
+    .settle-row {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .settle-row:last-child { border-bottom: none; }
+    .settle-from   { font-weight: 700; color: #dc2626; }
+    .settle-to     { font-weight: 700; color: var(--green); }
+    .settle-amount { margin-left: auto; font-weight: 900; font-size: 16px; color: var(--text); }
+    .settle-even   { text-align: center; padding: 16px; font-size: 14px; color: var(--green); font-weight: 700; }
+
+    .currency-toggle { display: flex; gap: 7px; }
+    .currency-btn {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: white; color: var(--text-2);
+      font-size: 14px; font-weight: 700;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; text-align: center;
+    }
+    .currency-btn.selected { background: var(--pink); color: white; border-color: var(--pink); }
+
+    .for-whom-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .select-all-btn {
+      width: 100%; padding: 9px; border-radius: 10px;
+      border: 1.5px dashed var(--border);
+      background: white; color: var(--text-3);
+      font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    /* ─── Edit Controls ─────────────────────────────────── */
+    .edit-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: none; border-radius: 7px;
+      background: #e0f2fe; color: #0369a1;
+      font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .list-edit-input {
+      flex: 1; padding: 6px 10px;
+      border: 1.5px solid var(--pink); border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      background: white; outline: none;
+    }
+    .list-save-btn {
+      width: 28px; height: 28px; flex-shrink: 0;
+      border: none; border-radius: 7px;
+      background: #dcfce7; color: #16a34a;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .msg-actions { display: flex; gap: 5px; margin-left: auto; }
+    .msg-action-btn {
+      border: none; border-radius: 6px; padding: 4px 9px;
+      font-size: 12px; cursor: pointer; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .msg-edit-btn { background: #e0f2fe; color: #0369a1; }
+    .msg-del-btn  { background: #fee2e2; color: #dc2626; }
+
+    /* Expense overlay — reuse msg-overlay styles */
+    .exp-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-end;
+    }
+    .exp-overlay.visible { display: flex; }
+    .exp-form-sheet {
+      background: white; border-radius: 24px 24px 0 0;
+      padding: 24px 20px;
+      padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+      width: 100%; max-height: 90vh; overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header" id="app-header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div>
+        <div class="trip-title">🌸 東北賞櫻之旅</div>
+        <div class="trip-sub">仙台・平泉・青森・弘前・松島</div>
+      </div>
+      <div class="countdown">
+        <div class="cd-num" id="cd-num">—</div>
+        <div class="cd-label" id="cd-label">天後出發</div>
+      </div>
+    </div>
+    <div class="header-pills">
+      <span class="pill">2026年4月15－22日</span>
+      <span class="pill">8天7夜</span>
+      <span class="pill">6人同行</span>
+    </div>
+    <div class="header-font-row">
+      <span class="hdr-font-label">字體</span>
+      <button class="hdr-font-btn" id="hfb-md" onclick="setFontSize('md')">標準</button>
+      <button class="hdr-font-btn" id="hfb-lg" onclick="setFontSize('lg')">大</button>
+      <button class="hdr-font-btn" id="hfb-xl" onclick="setFontSize('xl')">特大</button>
+    </div>
+  </div>
+</header>
+
+<!-- Meeting Banner (shows on all tabs when meeting is active) -->
+<div class="meeting-banner" id="meeting-banner" onclick="switchTab('meeting')">
+  <div class="mb-inner">
+    <span class="mb-icon">🔔</span>
+    <div class="mb-info">
+      <div class="mb-countdown" id="banner-countdown"></div>
+      <div class="mb-sub" id="banner-sub"></div>
+    </div>
+    <span style="font-size:18px;opacity:0.7">›</span>
+  </div>
+</div>
+
+<!-- Main Content -->
+<main class="content" id="app-content">
+  <div class="tab-panel active" id="tab-itinerary"></div>
+  <div class="tab-panel" id="tab-checklist"></div>
+  <div class="tab-panel" id="tab-meeting"></div>
+  <div class="tab-panel" id="tab-messages"></div>
+  <div class="tab-panel" id="tab-expenses"></div>
+</main>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-itinerary" onclick="switchTab('itinerary')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span>行程</span>
+  </button>
+  <button class="nav-btn" id="nav-checklist" onclick="switchTab('checklist')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+    </svg>
+    <span>清單</span>
+  </button>
+  <button class="nav-btn" id="nav-meeting" onclick="switchTab('meeting')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+    <span class="nav-dot" id="meeting-dot"></span>
+    <span>集合</span>
+  </button>
+  <button class="nav-btn" id="nav-messages" onclick="switchTab('messages')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span class="nav-dot" id="messages-dot"></span>
+    <span>留言</span>
+  </button>
+  <button class="nav-btn" id="nav-expenses" onclick="switchTab('expenses')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+    </svg>
+    <span>記帳</span>
+  </button>
+</nav>
+
+<!-- Expense Form Overlay -->
+<div class="exp-overlay" id="exp-overlay" onclick="if(event.target===this)hideExpForm()">
+  <div class="exp-form-sheet">
+    <div class="msg-form-header">
+      <span class="msg-form-title" id="exp-form-title">💰 新增記帳</span>
+      <button class="msg-close-btn" onclick="hideExpForm()">✕</button>
+    </div>
+    <div id="exp-form-body"></div>
+  </div>
+</div>
+
+<!-- Message Form Overlay -->
+<div class="msg-overlay" id="msg-overlay" onclick="if(event.target===this)hideMsgForm()">
+  <div class="msg-form-sheet">
+    <div class="msg-form-header">
+      <span class="msg-form-title" id="msg-form-title">💬 新增留言</span>
+      <button class="msg-close-btn" onclick="hideMsgForm()">✕</button>
+    </div>
+    <div id="msg-form-body"></div>
+  </div>
+</div>
+
+<script>
+// ─── Trip Data ────────────────────────────────────────────────────
+
+const DAYS = [
+  {
+    day: 1, date: "4/15", wd: "三", theme: "抵達仙台", emoji: "✈️",
+    acts: [
+      { icon: "✈️", name: "桃園機場集合", sub: "CI118", time: "08:30" },
+      { icon: "🛬", name: "仙台機場抵達", sub: "仙台空港", time: "16:00", map: "仙台空港" },
+      { icon: "🏨", name: "Check-in 飯店", sub: "ホテル京阪仙台", map: "ホテル京阪仙台" },
+    ],
+    hotel: { name: "ホテル京阪仙台", note: "¥123,400（含4/16）", paid: false, map: "ホテル京阪仙台" },
+    flight: { label: "去程航班", from: "TPE", fromCity: "桃園", to: "SDJ", toCity: "仙台", dept: "08:25", arr: "16:00", num: "CI 118" }
+  },
+  {
+    day: 2, date: "4/16", wd: "四", theme: "仙台市區賞櫻", emoji: "🌸",
+    acts: [
+      { icon: "⛩️", name: "瑞鳳殿", sub: "伊達政宗靈廟・賞櫻", map: "瑞鳳殿" },
+      { icon: "🌸", name: "榴岡公園", sub: "仙台賞櫻名所", map: "榴岡公園 仙台" },
+      { icon: "⛩️", name: "仙台東照宮", sub: "賞櫻", map: "仙台東照宮" },
+      { icon: "🛍️", name: "仙台市區購物", sub: "商店街、藥妝、伴手禮", map: "仙台駅" },
+    ],
+    hotel: { name: "ホテル京阪仙台", note: "¥123,400（含4/15-16 兩晚）", paid: false, map: "ホテル京阪仙台" }
+  },
+  {
+    day: 3, date: "4/17", wd: "五", theme: "平泉 & 北上夜櫻", emoji: "🏛️",
+    acts: [
+      { icon: "🚗", name: "租車出發", sub: "7人座×1 ＋ 5人座×1", time: "09:30" },
+      { icon: "🏛️", name: "中尊寺金色堂", sub: "世界文化遺產・平泉", map: "中尊寺金色堂" },
+      { icon: "🌸", name: "北上展勝地", sub: "夜櫻名所", map: "北上展勝地" },
+    ],
+    hotel: { name: "ANA Holiday Inn", note: "¥72,750", paid: false, map: "https://maps.app.goo.gl/iBk1aMndmRVf9up29" },
+    parking: {
+      lots: [
+        { name: "中尊寺第1駐車場",   note: "【中尊寺】最靠近入口",           map: "中尊寺第1駐車場 平泉" },
+        { name: "坂の上駐車場",       note: "【中尊寺】備案",                 map: "坂の上駐車場 平泉" },
+        { name: "展勝地公園駐車場",   note: "【北上展勝地】",                 map: "展勝地公園駐車場 北上" },
+        { name: "Rest House 駐車場",  note: "【北上展勝地】建議15:00前到",    map: "北上展勝地レストハウス" },
+      ],
+      searchQuery: "北上展勝地 駐車場"
+    },
+    car: { label: "🚗 取車", note: "7人座×1 ＋ 5人座×1・¥177,182 已付清", bookings: ["99921331000", "99921336800"] }
+  },
+  {
+    day: 4, date: "4/18", wd: "六", theme: "青森市區", emoji: "🐟",
+    acts: [
+      { icon: "🐟", name: "古川魚菜市場", sub: "青森最大早市", map: "青森 古川市場" },
+      { icon: "🏮", name: "ねぶたの家ワ・ラッセ", sub: "睡魔祭博物館", map: "ねぶたの家ワ・ラッセ" },
+      { icon: "🍎", name: "A-FACTORY", sub: "青森蘋果酒廠・購物", map: "A-FACTORY 青森" },
+    ],
+    hotel: { name: "Fantastic Story（Airbnb）", note: "¥31,600（含4/19）", paid: false, map: "弘前市 Fantastic Story Airbnb" },
+    parking: {
+      lots: [
+        { name: "Paraca 青森古川第一",  note: "【古川市場】",           map: "パラカ青森古川第1" },
+        { name: "周辺P共通停車場",      note: "【古川市場】備案",       map: "青森市 古川市場 駐車場" },
+        { name: "A-FACTORY 停車場",     note: "【A-FACTORY】消費折抵", map: "A-FACTORY 青森 駐車場" },
+      ],
+      searchQuery: "青森市 駐車場"
+    }
+  },
+  {
+    day: 5, date: "4/19", wd: "日", theme: "弘前全日賞櫻", emoji: "🌸",
+    acts: [
+      { icon: "🌸", name: "弘前公園", sub: "日本最盛名賞櫻勝地", map: "弘前公園" },
+      { icon: "🏮", name: "津輕藩睡魔村", sub: "體驗津輕文化", map: "津軽藩ねぷた村" },
+      { icon: "🌙", name: "弘前公園夜櫻", sub: "燈光絢麗・夜間特別開放", time: "夜", map: "弘前公園" },
+    ],
+    hotel: { name: "Fantastic Story（Airbnb）", note: "¥31,600（含4/18-19 兩晚）", paid: false, map: "弘前市 Fantastic Story Airbnb" },
+    parking: {
+      lots: [
+        { name: "弘前市役所駐車場",       note: "【弘前公園】最佳選擇・建議08:30前到", map: "弘前市役所 駐車場" },
+        { name: "市立觀光館地下停車場",   note: "【弘前公園】備案",                    map: "弘前市立観光館 駐車場" },
+        { name: "文化中心停車場",         note: "【弘前公園】備案・近東門",             map: "弘前文化センター 駐車場" },
+        { name: "津軽藩ねぷた村停車場",   note: "【睡魔村】消費折抵停車費",            map: "津軽藩ねぷた村 駐車場" },
+      ],
+      searchQuery: "弘前公園 駐車場"
+    }
+  },
+  {
+    day: 6, date: "4/20", wd: "一", theme: "松島溫泉・一之坊", emoji: "♨️",
+    acts: [
+      { icon: "🚗", name: "前往松島", sub: "沿途欣賞風景" },
+      { icon: "♨️", name: "松島一之坊", sub: "入住全包式溫泉度假村", map: "松島一の坊" },
+      { icon: "🛁", name: "溫泉 & 懷石料理", sub: "悠閒放鬆日" },
+    ],
+    hotel: { name: "松島一之坊", note: "", paid: true, map: "松島一の坊" },
+    parking: {
+      lots: [],
+      searchQuery: "松島 駐車場"
+    }
+  },
+  {
+    day: 7, date: "4/21", wd: "二", theme: "松島巡禮 & 仙台 Outlet", emoji: "⛵",
+    acts: [
+      { icon: "⛵", name: "松島灣遊船", sub: "日本三景之一", map: "松島海岸" },
+      { icon: "⛩️", name: "瑞巖寺", sub: "伊達政宗菩提寺", map: "瑞巌寺" },
+      { icon: "🛍️", name: "仙台泉 Outlet & Tapio", sub: "最後採買", map: "仙台泉プレミアム・アウトレット" },
+    ],
+    hotel: { name: "仙台皇家公園酒店", note: "", paid: true, map: "仙台ロイヤルパークホテル" },
+    parking: {
+      lots: [
+        { name: "瑞巖寺停車場",         note: "¥500/次（MapCode: 110 442 138*54）", map: "瑞巌寺 駐車場 松島" },
+        { name: "松島公園第1～5停車場", note: "備案",                                map: "松島公園 駐車場" },
+        { name: "町営三十刈停車場",     note: "⚠️ 避免：上坡且距景點遠",            warn: true },
+      ],
+      searchQuery: "松島 駐車場"
+    }
+  },
+  {
+    day: 8, date: "4/22", wd: "三", theme: "返家", emoji: "🏠",
+    acts: [
+      { icon: "🍳", name: "早餐", sub: "仙台皇家公園酒店・住宿含早餐" },
+      { icon: "⛽", name: "加油", sub: "還車前加油", time: "14:00", map: "ガソリンスタンド 仙台空港" },
+      { icon: "🚗", name: "還車", sub: "返還租車", time: "14:30" },
+      { icon: "✈️", name: "仙台機場起飛", sub: "CI119 → 桃園 20:50", time: "17:20", map: "仙台空港" },
+    ],
+    hotel: null,
+    flight: { label: "回程航班", from: "SDJ", fromCity: "仙台", to: "TPE", toCity: "桃園", dept: "17:20", arr: "20:50", num: "CI 119" },
+    car: null
+  },
+];
+
+const HOTELS = [
+  { nights: ["4/15","4/16"], name: "ホテル京阪仙台",         loc: "宮城縣・仙台市",  note: "現場付 ¥123,400",  paid: false, map: "ホテル京阪仙台" },
+  { nights: ["4/17"],        name: "ANA Holiday Inn",         loc: "岩手縣・北上市",  note: "現場付 ¥72,750",   paid: false, map: "https://maps.app.goo.gl/iBk1aMndmRVf9up29" },
+  { nights: ["4/18","4/19"], name: "Fantastic Story（Airbnb）",loc: "青森縣・弘前市",  note: "現場付 ¥31,600",   paid: false, map: "弘前市 Fantastic Story Airbnb" },
+  { nights: ["4/20"],        name: "松島一之坊",               loc: "宮城縣・松島",    note: "已刷卡付清",       paid: true,  map: "松島一の坊" },
+  { nights: ["4/21"],        name: "仙台皇家公園酒店",          loc: "宮城縣・仙台",    note: "已付款",           paid: true,  map: "仙台ロイヤルパークホテル" },
+];
+
+const MEMBERS = [
+  { name: "鄭婷宇", avatar: "🧡" }, { name: "蔡東霖", avatar: "💙" },
+  { name: "鄭婷任", avatar: "💚" }, { name: "黃雪華", avatar: "💛" },
+  { name: "蔡東庭", avatar: "💜" }, { name: "陳燕芬", avatar: "🩷" },
+];
+
+const NOTES = [
+  { icon: "🔌", text: "日本插座電壓 100V，雙孔同台灣，無須轉接頭" },
+  { icon: "📱", text: "提前完成 Visit Japan Web 申請，截圖 QR Code 備用" },
+  { icon: "🚗", text: "租車須攜帶駕照正本及日文譯本，兩者缺一不可" },
+  { icon: "🍱", text: "長輩用餐建議選西京燒、煮付等無刺魚料理" },
+  { icon: "📶", text: "出發前確認國際漫遊已開通，或準備 SIM 卡" },
+  { icon: "🚻", text: "長途開車前先如廁，日本休息站通常很乾淨" },
+  { icon: "🌂", text: "四月東北多雨，建議攜帶折疊傘或輕薄雨衣" },
+];
+
+const CHECKLIST = [
+  "護照","駕照正本","日文駕照譯本","Visit Japan Web QR Code",
+  "日幣現金","信用卡","國際漫遊開通","換洗衣物（8天）",
+  "盥洗用品","個人藥品","口罩","充電器 + 行動電源","雨具","保暖外套",
+];
+const CHECK_KEY = "tohoku2026-check-v1";
+
+const RESTAURANTS = {
+  1: [
+    { name: "S-PAL 仙台 B1 美食街", note: "仙台車站地下，到埗當晚覓食方便", map: "S-PAL仙台 B1" },
+    { name: "成城石井 / NewDays", note: "車站內超市，可買零食、飲料備用", map: "成城石井 仙台駅" },
+  ],
+  2: [
+    { name: "Evian Café", note: "松島附近咖啡廳，網美打卡好去處", map: "Evian Café 松島" },
+    { name: "Date Cafe O'rder", note: "仙台在地輕食咖啡", map: "Date Cafe Order 仙台" },
+    { name: "Mamebo", note: "自家烘焙咖啡廳", map: "Mamebo 仙台" },
+  ],
+  3: [
+    { name: "Cafe Sekimiya", note: "平泉附近的日式甜點咖啡廳", map: "Cafe Sekimiya 平泉" },
+    { name: "うなぎの笹船", note: "平泉在地鰻魚飯名店", map: "うなぎの笹船 平泉" },
+    { name: "平泉芭蕉館", note: "在地料理定食，松尾芭蕉路線附近", map: "平泉芭蕉館" },
+    { name: "焼鳥居酒屋 島鳥", note: "盛岡燒鳥居酒屋，晚餐推薦", map: "焼鳥居酒屋島鳥 盛岡" },
+    { name: "枕流亭", note: "盛岡在地日式料理", map: "枕流亭 盛岡" },
+  ],
+  4: [
+    { name: "UGUISU", note: "青森咖啡廳，使用在地食材，環境清新", map: "UGUISU 青森" },
+    { name: "おさない", note: "青森老牌洋食店，帆立貝奶油飯必點", map: "おさない 青森" },
+  ],
+  5: [
+    { name: "PIZZERIA MIA", note: "弘前人氣義式披薩，現烤窯烤", map: "PIZZERIA MIA 弘前" },
+    { name: "食樂處 櫻家", note: "弘前在地定食，賞櫻季超人氣", map: "食楽処さくら家 弘前" },
+    { name: "Kikufuji", note: "弘前咖啡老店，復古洋館風格", map: "Kikufuji 弘前" },
+    { name: "大正浪漫茶室", note: "弘前公園附近，甜點 & 輕食，賞花絕配", map: "大正浪漫茶室 弘前" },
+  ],
+  6: [
+    { name: "松島一之坊", note: "住宿含早晚餐，海景懷石料理", map: "松島一之坊" },
+  ],
+  7: [
+    { name: "仙台泉 Outlet / Tapio", note: "購物之餘可於 Outlet 美食廣場用餐", map: "仙台泉プレミアムアウトレット" },
+    { name: "Mamebo", note: "自家烘焙咖啡廳", map: "Mamebo 仙台" },
+  ],
+  8: [],
+};
+
+// ─── Firebase Config ──────────────────────────────────────────────
+// ⚠️  請填入你的 Firebase 設定，設定好後才能使用集合通知功能
+// 設定方式請見 app 內「集合」tab 的說明
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBpJo9hk99YtRpG9U2MABvE5DwRauDvMpY",
+  authDomain:        "aomori-travel-988ca.firebaseapp.com",
+  databaseURL:       "https://aomori-travel-988ca-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "aomori-travel-988ca",
+  storageBucket:     "aomori-travel-988ca.firebasestorage.app",
+  messagingSenderId: "537309666939",
+  appId:             "1:537309666939:web:01ee117d702162e6130cde"
+};
+const DB_PATH  = "tohoku2026/meeting";
+const MSG_PATH = "tohoku2026/messages";
+const EXP_PATH  = "tohoku2026/expenses";
+const SHOP_PATH = "tohoku2026/shopping";
+
+// ─── App State ────────────────────────────────────────────────────
+
+let openDays       = new Set();
+let checked        = new Set(JSON.parse(localStorage.getItem(CHECK_KEY) || "[]"));
+let currentMeeting = null;
+let countdownTimer = null;
+let alarmFiredForTime = null; // track which meeting time has already triggered the alarm
+let showForm       = false;
+let firebaseReady  = false;
+let allMessages    = [];
+let msgFormDay     = 1;
+let msgFormName    = localStorage.getItem("messageName") || "";
+
+let allExpenses     = [];
+let expFormCurrency = "JPY";
+let expFormPayer    = "";
+let expFormForWhom  = new Set(MEMBERS.map(m => m.name));
+let expShowSettle   = false;
+let expEditKey      = null;
+
+let msgEditKey         = null;
+let editingShoppingId  = null;
+let editingCheckId     = null;
+
+const CUSTOM_CHECK_KEY  = "tohoku2026-custom-check-v1";
+const SHOPPING_KEY      = "tohoku2026-shopping-v1";
+const SHOPPING_INIT_KEY = "tohoku2026-shopping-init-v1";
+const FONT_KEY          = "tohoku2026-font-size";
+
+const PRESET_SHOPPING = [
+  "🌙 萩之月（仙台）仙台招牌蛋奶餅乾，造型像月亮",
+  "🫛 ずんだ餅（仙台）毛豆口味麻糬，仙台獨有",
+  "🐟 笹かまぼこ（仙台）竹葉形白魚魚板真空包",
+  "🍎 青森蘋果派（青森）整顆蘋果製作的得獎甜點",
+  "🧃 青森蘋果汁（青森）津輕蘋果100%純汁，甘甜無比",
+  "🍘 南部せんべい（岩手）南部傳統薄脆餅，多種口味",
+  "🦪 松島牡蠣製品（松島）松島特產海鮮伴手禮",
+  "🍡 松島もなか（松島）松島名物最中餅",
+];
+// 需要從既有 localStorage 移除的舊預設項目關鍵字
+const REMOVED_PRESETS = ["牛舌", "刺繡工藝", "玻璃小物", "木娃娃"];
+let customChecks  = JSON.parse(localStorage.getItem(CUSTOM_CHECK_KEY) || "[]");
+let shoppingItems;
+if (!localStorage.getItem(SHOPPING_INIT_KEY)) {
+  shoppingItems = PRESET_SHOPPING.map((text, i) => ({ id: 1000 + i, text, bought: false }));
+  localStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingItems));
+  localStorage.setItem(SHOPPING_INIT_KEY, "1");
+} else {
+  shoppingItems = JSON.parse(localStorage.getItem(SHOPPING_KEY) || "[]");
+  // 一次性清理：移除已刪除的預設項目（不影響使用者自行新增的項目）
+  const before = shoppingItems.length;
+  shoppingItems = shoppingItems.filter(s => !REMOVED_PRESETS.some(kw => s.text.includes(kw)));
+  if (shoppingItems.length !== before) localStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingItems));
+}
+let showCheckInput        = false;
+let showShoppingInput     = false;
+let checklistSubTab       = "shopping";
+let pendingShoppingPhotos = [];
+
+// ─── Firebase Init ────────────────────────────────────────────────
+
+function initFirebase() {
+  if (FIREBASE_CONFIG.apiKey.startsWith("YOUR")) return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const db = firebase.database();
+    db.ref(DB_PATH).on("value", snap => {
+      const prev = currentMeeting;
+      currentMeeting = snap.val();
+      // Reset alarm if meeting changed or cleared
+      if (!currentMeeting || (prev && prev.time !== currentMeeting.time)) {
+        alarmFiredForTime = null;
+      }
+      updateMeetingBanner();
+      renderMeeting();
+      adjustLayout();
+    });
+    db.ref(MSG_PATH).on("value", snap => {
+      const data = snap.val() || {};
+      allMessages = Object.entries(data).map(([key, val]) => ({ ...val, _key: key }))
+        .sort((a, b) => a.timestamp - b.timestamp);
+      renderMessages();
+    });
+    db.ref(EXP_PATH).on("value", snap => {
+      const data = snap.val() || {};
+      allExpenses = Object.entries(data).map(([key, val]) => ({ ...val, _key: key }))
+        .sort((a, b) => a.timestamp - b.timestamp);
+      renderExpenses();
+    });
+    firebaseReady = true;
+  } catch (e) {
+    console.warn("Firebase init failed:", e);
+  }
+}
+
+function setMeeting(time, message, setBy) {
+  if (!firebaseReady) return;
+  firebase.database().ref(DB_PATH).set({
+    time, message: message || "", setBy: setBy || "", setAt: Date.now()
+  });
+}
+
+function clearMeeting() {
+  if (!firebaseReady) return;
+  cancelAlarmNotif();
+  firebase.database().ref(DB_PATH).remove();
+}
+
+// ─── Countdown Logic ──────────────────────────────────────────────
+
+function calcCountdown(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  const now    = new Date();
+  const target = new Date(now);
+  target.setHours(h, m, 0, 0);
+  if (target <= now) return null; // passed
+  const diff = target - now;
+  const hh   = Math.floor(diff / 3600000);
+  const mm   = Math.floor((diff % 3600000) / 60000);
+  const ss   = Math.floor((diff % 60000) / 1000);
+  return { hh, mm, ss };
+}
+
+function fmtCountdown(c) {
+  if (!c) return "已過集合時間";
+  const pad = n => String(n).padStart(2, "0");
+  return `${pad(c.hh)}:${pad(c.mm)}:${pad(c.ss)}`;
+}
+
+function startCountdownTick() {
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    if (!currentMeeting) return;
+    const c = calcCountdown(currentMeeting.time);
+
+    // Update banner
+    const bannerCD = document.getElementById("banner-countdown");
+    if (bannerCD) bannerCD.textContent = c ? `距集合 ${fmtCountdown(c)}` : "已過集合時間";
+
+    // Update meeting tab clock (if visible)
+    const clock = document.getElementById("meeting-clock");
+    if (clock) {
+      clock.textContent = fmtCountdown(c);
+      clock.className   = "meeting-clock" + (c ? "" : " passed");
+    }
+
+    // Trigger alarm once when countdown first reaches zero
+    if (!c && alarmFiredForTime !== currentMeeting.time) {
+      alarmFiredForTime = currentMeeting.time;
+      triggerAlarm();
+    }
+  }, 1000);
+}
+
+// ─── Banner ───────────────────────────────────────────────────────
+
+function updateMeetingBanner() {
+  const banner = document.getElementById("meeting-banner");
+  const dot    = document.getElementById("meeting-dot");
+
+  if (!currentMeeting) {
+    banner.classList.remove("visible");
+    dot.classList.remove("visible");
+    document.getElementById("banner-countdown").textContent = "";
+    document.getElementById("banner-sub").textContent = "";
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    return;
+  }
+
+  banner.classList.add("visible");
+  dot.classList.add("visible");
+
+  const c = calcCountdown(currentMeeting.time);
+  document.getElementById("banner-countdown").textContent = c ? `距集合 ${fmtCountdown(c)}` : "已過集合時間";
+
+  let sub = `${currentMeeting.time} 集合`;
+  if (currentMeeting.message) sub += `・${currentMeeting.message}`;
+  document.getElementById("banner-sub").textContent = sub;
+
+  startCountdownTick();
+}
+
+// ─── Alarm ────────────────────────────────────────────────────────
+
+function playAlarm() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const beep = (startTime, dur) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.7, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+      osc.start(startTime);
+      osc.stop(startTime + dur);
+    };
+    const t = ctx.currentTime;
+    beep(t,       0.25);
+    beep(t + 0.35, 0.25);
+    beep(t + 0.70, 0.25);
+    beep(t + 1.10, 0.55);
+  } catch (e) {}
+}
+
+function triggerAlarm() {
+  playAlarm();
+  if ("vibrate" in navigator) {
+    navigator.vibrate([400, 200, 400, 200, 600]);
+  }
+  const banner = document.getElementById("meeting-banner");
+  if (banner) {
+    banner.classList.remove("alarm-flash");
+    void banner.offsetWidth; // force reflow so re-adding class re-triggers animation
+    banner.classList.add("alarm-flash");
+    banner.addEventListener("animationend", () => banner.classList.remove("alarm-flash"), { once: true });
+  }
+  // Show system notification if page is in background
+  if (typeof Notification !== "undefined" && Notification.permission === "granted" && currentMeeting) {
+    const body = currentMeeting.message || "現在出發！";
+    new Notification("🔔 集合時間到！", { body, tag: "meeting-alarm", requireInteraction: true });
+  }
+}
+
+async function requestNotifPermission() {
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+}
+
+async function scheduleAlarmNotif(timeStr, message) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const [h, m] = timeStr.split(":").map(Number);
+  const target = new Date();
+  target.setHours(h, m, 0, 0);
+  const timestamp = target.getTime();
+  if (timestamp <= Date.now()) return;
+
+  // Try Notification Triggers API (Chrome Android)
+  if (typeof TimestampTrigger !== "undefined" && navigator.serviceWorker) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.getNotifications({ tag: "meeting-alarm" });
+      existing.forEach(n => n.close());
+      await reg.showNotification("🔔 集合時間到！", {
+        body: message || "現在出發！",
+        showTrigger: new TimestampTrigger(timestamp),
+        vibrate: [400, 200, 400, 200, 600],
+        requireInteraction: true,
+        tag: "meeting-alarm"
+      });
+      return;
+    } catch (e) {}
+  }
+
+  // Fallback: ask SW to schedule via setTimeout (works while browser is open)
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "SCHEDULE_ALARM", timestamp, message: message || "現在出發！"
+    });
+  }
+}
+
+async function cancelAlarmNotif() {
+  if (navigator.serviceWorker) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const notifs = await reg.getNotifications({ tag: "meeting-alarm" });
+      notifs.forEach(n => n.close());
+    } catch (e) {}
+  }
+  if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: "CANCEL_ALARM" });
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────
+
+function mapUrl(q) {
+  if (q && q.startsWith("http")) return q;
+  return "https://maps.google.com/?q=" + encodeURIComponent(q);
+}
+function getTodayDate() { const d = new Date(); return `${d.getMonth()+1}/${d.getDate()}`; }
+function isPast(ds) {
+  const [m, d] = ds.split("/").map(Number);
+  const date   = new Date(2026, m-1, d);
+  const now    = new Date(); now.setHours(0,0,0,0);
+  return date < now;
+}
+
+// ─── Tab Switching ────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  document.getElementById("nav-" + tab).classList.add("active");
+  if (tab === "itinerary") {
+    scrollToTodayCard();
+  } else {
+    document.getElementById("app-content").scrollTop = 0;
+  }
+}
+
+function scrollToTodayCard() {
+  requestAnimationFrame(() => {
+    const card    = document.querySelector(".day-card.day-today");
+    const content = document.getElementById("app-content");
+    if (!content) return;
+    if (!card) { content.scrollTop = 0; return; }
+    const weatherWrap = document.querySelector(".weather-strip-wrap");
+    const offset = weatherWrap ? weatherWrap.offsetHeight + 14 : 16;
+    content.scrollTop = card.offsetTop - offset;
+  });
+}
+
+// ─── Day Cards ────────────────────────────────────────────────────
+
+function toggleDay(n) {
+  if (openDays.has(n)) { openDays.delete(n); } else { openDays.add(n); }
+  // 直接切換 class，不重新 render 整個頁面（避免捲動跳動、天氣重新 loading）
+  const card = document.querySelector(`.day-card[data-day="${n}"]`);
+  if (card) {
+    card.classList.toggle("open", openDays.has(n));
+  } else {
+    renderItinerary(); // fallback（理論上不會到這）
+  }
+}
+
+// ─── Checklist ────────────────────────────────────────────────────
+
+function toggleCheck(i) {
+  checked.has(i) ? checked.delete(i) : checked.add(i);
+  localStorage.setItem(CHECK_KEY, JSON.stringify([...checked]));
+  renderPacking();
+}
+
+// ─── Meeting Form Actions ─────────────────────────────────────────
+
+function showMeetingForm() { showForm = true;  renderMeeting(); }
+function hideMeetingForm() { showForm = false; renderMeeting(); }
+
+function submitMeeting() {
+  const time = document.getElementById("m-time").value;
+  if (!time) { alert("請選擇集合時間"); return; }
+  const msg  = document.getElementById("m-msg").value.trim();
+  const by   = document.getElementById("m-by").value.trim();
+  if (by) localStorage.setItem("meetingName", by);
+  setMeeting(time, msg, by);
+  showForm = false;
+  requestNotifPermission().then(() => scheduleAlarmNotif(time, msg));
+}
+
+// ─── Layout ───────────────────────────────────────────────────────
+
+function adjustLayout() {
+  const headerH = document.getElementById("app-header").offsetHeight;
+  const banner  = document.getElementById("meeting-banner");
+  const bannerH = banner.classList.contains("visible") ? banner.offsetHeight : 0;
+  document.getElementById("app-content").style.paddingTop = (headerH + bannerH) + "px";
+  // Position banner just below header
+  banner.style.top = headerH + "px";
+}
+
+// ─── Weather ──────────────────────────────────────────────────────
+
+// 每一天對應的天氣查詢地點
+const WEATHER_LOCS = {
+  "4/15": [{ lat: 38.26, lon: 140.88, label: "仙台",     key: "sendai" }],
+  "4/16": [{ lat: 38.26, lon: 140.88, label: "仙台",     key: "sendai" }],
+  "4/17": [{ lat: 39.29, lon: 141.11, label: "平泉/北上", key: "kitakami" }],
+  "4/18": [{ lat: 40.82, lon: 140.74, label: "青森",     key: "aomori" },
+           { lat: 40.60, lon: 140.47, label: "弘前",     key: "hirosaki" }],
+  "4/19": [{ lat: 40.60, lon: 140.47, label: "弘前",     key: "hirosaki" }],
+  "4/20": [{ lat: 40.60, lon: 140.47, label: "弘前",     key: "hirosaki" },
+           { lat: 38.37, lon: 141.07, label: "松島",     key: "matsushima" }],
+  "4/21": [{ lat: 38.32, lon: 140.88, label: "仙台泉", key: "izumi", fallbackKey: "sendai", fallbackLabel: "仙台" }],
+  "4/22": [{ lat: 38.26, lon: 140.88, label: "仙台",     key: "sendai" }],
+};
+
+const WMO_ICON = {
+  0:"☀️", 1:"🌤", 2:"⛅", 3:"☁️",
+  45:"🌫", 48:"🌫",
+  51:"🌦", 53:"🌦", 55:"🌧",
+  61:"🌧", 63:"🌧", 65:"🌧",
+  71:"🌨", 73:"🌨", 75:"❄️",
+  80:"🌦", 81:"🌧", 82:"⛈",
+  95:"⛈", 96:"⛈", 99:"⛈",
+};
+
+function wmoIcon(code) { return WMO_ICON[code] || "🌡"; }
+
+// 將 "4/15" → "2026-04-15"
+function dateToISO(d) {
+  const [m, day] = d.split("/");
+  return `2026-${m.padStart(2,"0")}-${day.padStart(2,"0")}`;
+}
+
+async function loadWeatherStrip() {
+  const el = document.getElementById("weather-strip");
+  if (!el) return;
+
+  const today = getTodayDate();
+  // 算出「明天」= DAYS 中 today 下一天的 date
+  const todayIdx = DAYS.findIndex(d => d.date === today);
+  const tomorrowDate = todayIdx >= 0 && todayIdx + 1 < DAYS.length
+    ? DAYS[todayIdx + 1].date : null;
+
+  // 從 WEATHER_LOCS 動態取得所有唯一地點（保持順序）
+  const seen = new Set();
+  const uniqueLocs = Object.values(WEATHER_LOCS).flat()
+    .filter(l => seen.has(l.key) ? false : (seen.add(l.key), true));
+
+  try {
+    const forecasts = {};
+    await Promise.all(uniqueLocs.map(async loc => {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+        `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
+        `&start_date=2026-04-15&end_date=2026-04-22&timezone=Asia%2FTokyo`;
+      const res = await fetch(url);
+      const data = await res.json();
+      data.daily.time.forEach((isoDate, i) => {
+        const mmdd = isoDate.slice(5).replace("-", "/").replace(/^0/, "");
+        if (!forecasts[mmdd]) forecasts[mmdd] = {};
+        forecasts[mmdd][loc.key] = {
+          max:  Math.round(data.daily.temperature_2m_max[i]),
+          min:  Math.round(data.daily.temperature_2m_min[i]),
+          rain: data.daily.precipitation_probability_max[i] ?? 0,
+          code: data.daily.weather_code[i],
+        };
+      });
+    }));
+
+    const cards = DAYS.map(d => {
+      const locs = WEATHER_LOCS[d.date];
+      if (!locs) return "";
+      const isToday    = d.date === today;
+      const isTomorrow = d.date === tomorrowDate;
+      const isPastDay  = !isToday && !isTomorrow && (() => {
+        const [m, day] = d.date.split("/").map(Number);
+        return new Date(2026, m - 1, day) < new Date(new Date().setHours(0, 0, 0, 0));
+      })();
+      const cls = ["weather-day-card",
+        isToday    ? "is-today"    : "",
+        isTomorrow ? "is-tomorrow" : "",
+        isPastDay  ? "is-past"     : "",
+      ].filter(Boolean).join(" ");
+
+      const rows = locs.map(loc => {
+        let f = forecasts[d.date]?.[loc.key];
+        let displayLabel = loc.label;
+        if (!f && loc.fallbackKey) {
+          f = forecasts[d.date]?.[loc.fallbackKey];
+          displayLabel = loc.fallbackLabel || loc.label;
+        }
+        if (!f) return "";
+        const rainIcon = f.rain >= 50 ? "🌂 " : "";
+        return `<div class="wdc-row">
+          <span class="wdc-loc">${displayLabel}</span>
+          <span class="wdc-icon-sm">${wmoIcon(f.code)}</span>
+          <span class="wdc-temp">${f.min}°/${f.max}°</span>
+          <span class="wdc-rain">${rainIcon}${f.rain}%</span>
+        </div>`;
+      }).join("");
+
+      if (!rows.trim()) return "";
+      return `<div class="${cls}">
+        <div class="wdc-label">Day${d.day} ${d.date.split("/")[1]}日</div>
+        ${rows}
+      </div>`;
+    }).join("");
+
+    el.innerHTML = cards || `<span class="weather-loading">無法取得資料</span>`;
+
+    // ── 分頁圓點 ──
+    const dotsEl = document.getElementById("weather-dots");
+    const cardCount = el.querySelectorAll(".weather-day-card").length;
+    if (dotsEl && cardCount > 1) {
+      dotsEl.innerHTML = Array.from({length: cardCount}, (_, i) =>
+        `<div class="weather-dot" id="wdot-${i}"></div>`).join("");
+      const updateDots = () => {
+        const idx = Math.round(el.scrollLeft / (el.scrollWidth / cardCount));
+        dotsEl.querySelectorAll(".weather-dot").forEach((d, i) =>
+          d.classList.toggle("active", i === idx));
+      };
+      updateDots();
+      el.addEventListener("scroll", updateDots, { passive: true });
+    }
+
+    const todayCard = el.querySelector(".is-today");
+    if (todayCard) todayCard.scrollIntoView({ behavior: "auto", block: "nearest", inline: "start" });
+  } catch(e) {
+    el.innerHTML = `<span class="weather-loading">天氣載入失敗</span>`;
+  }
+}
+
+// ─── Render: Itinerary ────────────────────────────────────────────
+
+function renderItinerary() {
+  const today = getTodayDate();
+  const html  = DAYS.map(d => {
+    const isOpen  = openDays.has(d.day);
+    const isToday = d.date === today;
+    const past    = isPast(d.date) && !isToday;
+
+    const actsHtml = d.acts.map(a => `
+      <div class="act-item">
+        <span class="act-icon">${a.icon}</span>
+        <div class="act-info">
+          <div class="act-name">${a.name}</div>
+          ${a.sub ? `<div class="act-sub">${a.sub}</div>` : ""}
+        </div>
+        <div class="act-right">
+          ${a.time ? `<span class="time-tag">${a.time}</span>` : ""}
+          ${a.map  ? `<a class="map-btn" href="${mapUrl(a.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
+        </div>
+      </div>`).join("");
+
+    const hotelHtml = d.hotel ? `
+      <div class="day-hotel">
+        <span style="font-size:18px">🏨</span>
+        <div class="day-hotel-info">
+          <div class="day-hotel-name">${d.hotel.name}</div>
+          <div class="day-hotel-meta">
+            <span class="hotel-paid-badge ${d.hotel.paid ? 'paid' : 'unpaid'}">
+              ${d.hotel.paid
+                ? `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1.5,6 4.5,9 10.5,3"/></svg> 已付清`
+                : `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="5"/><line x1="6" y1="3.5" x2="6" y2="6.5"/><line x1="6" y1="8" x2="6" y2="8.5"/></svg> 現場付`}
+            </span>
+            ${d.hotel.note ? `<span class="day-hotel-note">${d.hotel.note}</span>` : ""}
+          </div>
+        </div>
+        ${d.hotel.map ? `<a class="map-btn" href="${mapUrl(d.hotel.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
+      </div>` : "";
+
+    const restaurantHtml = (() => {
+      const rests = RESTAURANTS[d.day];
+      if (!rests || rests.length === 0) return "";
+      const itemsHtml = rests.map(r => `
+        <div class="restaurant-item">
+          <div class="restaurant-left">
+            <div class="restaurant-name">${r.name}</div>
+            ${r.note ? `<div class="restaurant-note">${r.note}</div>` : ""}
+          </div>
+          ${r.map ? `<a class="map-btn" href="${mapUrl(r.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
+        </div>`).join("");
+      return `
+        <div class="restaurant-section">
+          <div class="restaurant-header">🍜 建議餐廳</div>
+          ${itemsHtml}
+        </div>`;
+    })();
+
+    const flightHtml = d.flight ? `
+      <div class="day-transport-card dtc-flight">
+        <div class="dtc-label">✈️ ${d.flight.label}</div>
+        <div class="dtc-flight-row">
+          <div class="dtc-port">
+            <div class="dtc-code">${d.flight.from}</div>
+            <div class="dtc-city">${d.flight.fromCity}</div>
+            <div class="dtc-time">${d.flight.dept}</div>
+          </div>
+          <div class="dtc-mid">
+            <div class="dtc-num">${d.flight.num}</div>
+            <div class="dtc-arrow">→</div>
+          </div>
+          <div class="dtc-port" style="text-align:right">
+            <div class="dtc-code">${d.flight.to}</div>
+            <div class="dtc-city">${d.flight.toCity}</div>
+            <div class="dtc-time">${d.flight.arr}</div>
+          </div>
+        </div>
+      </div>` : "";
+
+    const carHtml = d.car ? `
+      <div class="day-transport-card dtc-car">
+        <div class="dtc-label">${d.car.label}</div>
+        <div class="dtc-car-text">${d.car.note}</div>
+        ${d.car.bookings.length ? `<div class="dtc-car-sub">預約編號：${d.car.bookings.join("　")}</div>` : ""}
+      </div>` : "";
+
+    const parkingHtml = d.parking ? (() => {
+      const lotsHtml = d.parking.lots.map(p => `
+        <div class="parking-lot ${p.warn ? "warn" : ""}">
+          <div class="parking-left">
+            <div class="parking-name">${p.name}</div>
+            ${p.note ? `<div class="parking-note">${p.note}</div>` : ""}
+          </div>
+          ${p.map ? `<a class="map-btn" href="${mapUrl(p.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
+        </div>`).join("");
+      const btnLabel = d.parking.lots.length > 0 ? "🔍 搜尋更多停車場" : "🔍 搜尋附近停車場";
+      return `
+        <div class="parking-section">
+          <div class="parking-header">🅿️ 停車場資訊</div>
+          ${lotsHtml}
+          <a class="parking-search-btn" href="${mapUrl(d.parking.searchQuery)}" target="_blank" rel="noopener">${btnLabel}</a>
+        </div>`;
+    })() : "";
+
+    return `
+      <div class="day-card ${isOpen ? "open" : ""}${past ? " is-past" : ""}${isToday ? " day-today" : ""}" data-day="${d.day}">
+        <div class="day-header" onclick="toggleDay(${d.day})">
+          <div class="day-badge ${isToday ? "is-today" : past ? "is-past" : ""}">
+            <span class="day-num">Day ${d.day}</span>
+            <span class="day-date">${d.date.split("/")[1]}</span>
+          </div>
+          <div class="day-info">
+            <div class="day-theme">${d.theme}</div>
+            <div class="day-meta">${d.date}（${d.wd}）・${d.acts.length} 個景點</div>
+          </div>
+          <span class="day-emoji">${d.emoji}</span>
+          <svg class="day-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="day-body">
+          <div class="act-list">${actsHtml}</div>
+          ${flightHtml}
+          ${hotelHtml}
+          ${carHtml}
+          ${parkingHtml}
+          ${restaurantHtml}
+        </div>
+      </div>`;
+  }).join("");
+  const weatherHtml = `<div class="weather-strip-wrap">
+    <div class="weather-strip-title">🌡 行程天氣預報</div>
+    <div class="weather-strip" id="weather-strip">
+      <div class="weather-shimmer"></div>
+      <div class="weather-shimmer"></div>
+      <div class="weather-shimmer"></div>
+    </div>
+    <div class="weather-dots" id="weather-dots"></div>
+  </div>`;
+  document.getElementById("tab-itinerary").innerHTML = weatherHtml + html;
+  loadWeatherStrip();
+  scrollToTodayCard();
+}
+
+// ─── Render: Checklist (打包 + 購物 sub-tabs) ─────────────────────
+
+function renderChecklist() {
+  const p = checklistSubTab === "packing";
+  document.getElementById("tab-checklist").innerHTML = `
+    <div class="checklist-tabs">
+      <button class="checklist-tab-btn ${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
+      <button class="checklist-tab-btn ${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
+    </div>
+    <div id="tab-checklist-content"></div>`;
+  if (p) renderPacking(); else renderShopping();
+}
+
+function switchChecklistTab(sub) {
+  checklistSubTab = sub;
+  renderChecklist();
+  document.getElementById("app-content").scrollTop = 0;
+}
+
+// ─── Render: Packing ──────────────────────────────────────────────
+
+function renderPacking() {
+  let html = "";
+
+  // ── 行前清單 ──────────────────────────────────────
+  const fixedDone  = CHECKLIST.filter((_, i) => checked.has(i)).length;
+  const customDone = customChecks.filter(c => c.done).length;
+  const totalDone  = fixedDone + customDone;
+  const totalAll   = CHECKLIST.length + customChecks.length;
+
+  html += `<div class="sec-title">✅ 行前清單 <span style="font-weight:400;color:var(--text-3);font-size:12px;margin-left:6px">${totalDone}/${totalAll}</span></div>`;
+
+  html += `<div class="check-list">`;
+  CHECKLIST.forEach((item, i) => {
+    const ok = checked.has(i);
+    html += `
+      <div class="check-item ${ok ? "checked" : ""}" onclick="toggleCheck(${i})">
+        <div class="check-box"><span class="check-mark">✓</span></div>
+        <span class="check-label">${item}</span>
+      </div>`;
+  });
+  html += `</div>`;
+
+  customChecks.forEach(c => {
+    if (c.id === editingCheckId) {
+      html += `
+        <div class="list-item" style="gap:6px">
+          <input class="list-edit-input" id="check-edit-${c.id}" value="${c.text.replace(/"/g,'&quot;')}"
+                 onkeydown="if(event.key==='Enter')saveEditCheck(${c.id});if(event.key==='Escape')cancelEditCheck()">
+          <button class="list-save-btn" onclick="saveEditCheck(${c.id})">✓</button>
+          <button class="del-btn"       onclick="cancelEditCheck()">✕</button>
+        </div>`;
+    } else {
+      html += `
+        <div class="list-item ${c.done ? "done" : ""}" onclick="toggleCustomCheck(${c.id})">
+          <div class="list-check"><span class="list-check-mark">✓</span></div>
+          <span class="list-label">${c.text}</span>
+          <button class="edit-btn" onclick="event.stopPropagation();startEditCheck(${c.id})">✏️</button>
+          <button class="del-btn"  onclick="event.stopPropagation();deleteCustomCheck(${c.id})">✕</button>
+        </div>`;
+    }
+  });
+
+  if (showCheckInput) {
+    html += `
+      <div class="add-row">
+        <input id="check-input" type="text" placeholder="新增項目..."
+               onkeydown="if(event.key==='Enter')addCustomCheck(this.value)">
+        <button class="add-row-btn" onclick="addCustomCheck(document.getElementById('check-input').value)">新增</button>
+        <button class="del-btn" onclick="showCheckInput=false;renderPacking()">✕</button>
+      </div>`;
+    setTimeout(() => document.getElementById("check-input")?.focus(), 50);
+  } else {
+    html += `<button class="add-trigger" onclick="showCheckInput=true;renderPacking()">＋ 新增清單項目</button>`;
+  }
+
+  // ── 注意事項 ──────────────────────────────────────
+  html += `<div class="sec-title">⚠️ 注意事項</div>`;
+  NOTES.forEach(n => {
+    html += `<div class="note-item"><span class="note-icon">${n.icon}</span><span>${n.text}</span></div>`;
+  });
+
+  document.getElementById("tab-checklist-content").innerHTML = html;
+}
+
+// ─── Custom Checklist ─────────────────────────────────────────────
+
+function addCustomCheck(text) {
+  if (!text.trim()) return;
+  customChecks.push({ id: Date.now(), text: text.trim(), done: false });
+  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  showCheckInput = false;
+  renderPacking();
+}
+function toggleCustomCheck(id) {
+  const item = customChecks.find(i => i.id === id);
+  if (item) item.done = !item.done;
+  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  renderPacking();
+}
+function deleteCustomCheck(id) {
+  customChecks = customChecks.filter(i => i.id !== id);
+  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  renderPacking();
+}
+function startEditCheck(id) {
+  editingCheckId = id;
+  renderPacking();
+  setTimeout(() => document.getElementById("check-edit-" + id)?.focus(), 50);
+}
+function saveEditCheck(id) {
+  const val = (document.getElementById("check-edit-" + id)?.value || "").trim();
+  if (!val) return;
+  const item = customChecks.find(i => i.id === id);
+  if (item) item.text = val;
+  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  editingCheckId = null;
+  renderPacking();
+}
+function cancelEditCheck() {
+  editingCheckId = null;
+  renderPacking();
+}
+
+// ─── Shopping List ────────────────────────────────────────────────
+
+function _shopRef(key) { return firebase.database().ref(SHOP_PATH + (key ? "/" + key : "")); }
+function _shopSave() { localStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingItems)); }
+
+function addShopping(text, location = "") {
+  if (!text.trim()) { showShoppingInput = false; pendingShoppingPhotos = []; renderShopping(); return; }
+  const item = { id: Date.now(), text: text.trim(), bought: false,
+                 location: (location || "").trim(), photos: pendingShoppingPhotos.slice() };
+  shoppingItems.push(item); _shopSave();
+  showShoppingInput = false; pendingShoppingPhotos = [];
+  renderShopping();
+}
+function toggleShopping(id) {
+  const item = shoppingItems.find(i => i.id === id);
+  if (!item) return;
+  item.bought = !item.bought; _shopSave(); renderShopping();
+}
+function deleteShopping(id) {
+  shoppingItems = shoppingItems.filter(i => i.id !== id); _shopSave(); renderShopping();
+}
+function startEditShopping(id) {
+  editingShoppingId = id;
+  renderShopping();
+  setTimeout(() => document.getElementById("shop-edit-" + id)?.focus(), 50);
+}
+function saveEditShopping(id) {
+  const val = (document.getElementById("shop-edit-" + id)?.value || "").trim();
+  if (!val) return;
+  const item = shoppingItems.find(i => i.id === id);
+  if (!item) return;
+  item.text = val;
+  item.location = (document.getElementById("shop-loc-edit-" + id)?.value || "").trim();
+  editingShoppingId = null;
+  _shopSave(); renderShopping();
+}
+function cancelEditShopping() {
+  editingShoppingId = null;
+  renderShopping();
+}
+
+// ─── Shopping: Pending Photo (new-item form) ─────────────────────
+
+function openPendingPhotoPicker() {
+  const slots = 3 - pendingShoppingPhotos.length;
+  if (slots <= 0) return;
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*"; input.multiple = true;
+  input.onchange = async e => {
+    const files = Array.from(e.target.files).slice(0, slots);
+    for (const file of files) {
+      const data = await compressImage(file);
+      pendingShoppingPhotos.push({ data });
+    }
+    renderShopping();
+  };
+  input.click();
+}
+function deletePendingPhoto(idx) {
+  pendingShoppingPhotos.splice(idx, 1);
+  renderShopping();
+}
+
+// ─── Shopping: Photo Utilities ────────────────────────────────────
+
+async function compressImage(file, maxKB = 120) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else       { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        let q = 0.82, data = c.toDataURL("image/jpeg", q);
+        while (data.length > maxKB * 1024 * 1.37 && q > 0.3) {
+          q = Math.max(q - 0.1, 0.3);
+          data = c.toDataURL("image/jpeg", q);
+        }
+        resolve(data);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function openPhotoPicker(itemId) {
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*"; input.multiple = true;
+  input.onchange = async e => {
+    const item = shoppingItems.find(s => s.id === itemId);
+    if (!item) return;
+    const existing = item.photos || [];
+    const slots = 3 - existing.length;
+    if (slots <= 0) return;
+    const files = Array.from(e.target.files).slice(0, slots);
+    const photos = [...existing];
+    for (const f of files) photos.push({ data: await compressImage(f) });
+    if (firebaseReady && item._key) {
+      _shopRef(item._key).update({ photos });
+    } else {
+      item.photos = photos; _shopSave(); renderShopping();
+    }
+  };
+  input.click();
+}
+
+function deletePhoto(itemId, photoIdx) {
+  const item = shoppingItems.find(s => s.id === itemId);
+  if (!item) return;
+  const photos = [...(item.photos || [])];
+  photos.splice(photoIdx, 1);
+  if (firebaseReady && item._key) {
+    _shopRef(item._key).update({ photos });
+  } else {
+    item.photos = photos; _shopSave(); renderShopping();
+  }
+}
+
+function viewPhoto(itemId, photoIdx) {
+  const item = shoppingItems.find(s => s.id === itemId);
+  if (!item?.photos?.[photoIdx]) return;
+  const ov = document.createElement("div");
+  ov.className = "photo-overlay";
+  ov.onclick = () => ov.remove();
+  ov.innerHTML = `
+    <img src="${item.photos[photoIdx].data}" onclick="event.stopPropagation()">
+    <button class="photo-overlay-close" onclick="this.closest('.photo-overlay').remove()">✕</button>`;
+  document.body.appendChild(ov);
+}
+
+// ─── Font Size ────────────────────────────────────────────────────
+
+function updateFontBtns() {
+  const level = localStorage.getItem(FONT_KEY) || "md";
+  ["md", "lg", "xl"].forEach(l => {
+    document.getElementById("hfb-" + l)?.classList.toggle("active", l === level);
+  });
+}
+
+function setFontSize(level) {
+  if (level === "md") {
+    document.documentElement.removeAttribute("data-zoom");
+  } else {
+    document.documentElement.setAttribute("data-zoom", level);
+  }
+  localStorage.setItem(FONT_KEY, level);
+  updateFontBtns();
+}
+
+function initFontSize() {
+  const saved = localStorage.getItem(FONT_KEY) || "md";
+  if (saved !== "md") document.documentElement.setAttribute("data-zoom", saved);
+  updateFontBtns();
+}
+
+// ─── Render: Shopping ─────────────────────────────────────────────
+
+function renderShopping() {
+  let html = "";
+  const boughtCount = shoppingItems.filter(s => s.bought).length;
+  html += `<div class="sec-title">🛍️ 伴手禮 ＆ 購物清單 <span style="font-weight:400;color:var(--text-3);font-size:12px;margin-left:6px">${boughtCount}/${shoppingItems.length}</span></div>`;
+  html += `<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.6">可新增想買的物品、附上照片與購買地點 📍</div>`;
+
+  if (shoppingItems.length === 0 && !showShoppingInput) {
+    html += `<div style="text-align:center;padding:20px 0 8px;color:var(--text-3);font-size:13px">還沒有購物項目 🛒</div>`;
+  }
+
+  shoppingItems.forEach(s => {
+    const photos = s.photos || [];
+    if (s.id === editingShoppingId) {
+      html += `
+        <div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px">
+          <input class="list-edit-input" id="shop-edit-${s.id}" value="${s.text.replace(/"/g,'&quot;')}"
+                 placeholder="商品名稱"
+                 onkeydown="if(event.key==='Escape')cancelEditShopping()">
+          <input class="list-edit-input" id="shop-loc-edit-${s.id}" value="${(s.location||'').replace(/"/g,'&quot;')}"
+                 placeholder="📍 購買地點（選填）"
+                 onkeydown="if(event.key==='Enter')saveEditShopping(${s.id});if(event.key==='Escape')cancelEditShopping()">
+          <div style="display:flex;gap:6px">
+            <button class="list-save-btn" style="flex:1" onclick="saveEditShopping(${s.id})">✓ 儲存</button>
+            <button class="del-btn" onclick="cancelEditShopping()">✕</button>
+          </div>
+          <button class="del-btn" style="width:100%;border-radius:10px;padding:8px 0;font-size:13px;color:#e55;border-color:#fcc"
+                  onclick="if(confirm('確定刪除此項目？'))deleteShopping(${s.id})">🗑 刪除此項目</button>
+        </div>`;
+    } else {
+      const thumbsHtml = photos.length
+        ? `<div class="shop-photos">
+            ${photos.map((p, i) => `
+              <div class="shop-thumb-wrap">
+                <img class="shop-thumb" src="${p.data}" onclick="event.stopPropagation();viewPhoto(${s.id},${i})">
+                <button class="shop-thumb-del" onclick="event.stopPropagation();deletePhoto(${s.id},${i})">✕</button>
+              </div>`).join("")}
+            ${photos.length < 3
+              ? `<button class="shop-photo-add" onclick="event.stopPropagation();openPhotoPicker(${s.id})">📷</button>`
+              : ""}
+          </div>`
+        : `<button class="shop-photo-add-inline" onclick="event.stopPropagation();openPhotoPicker(${s.id})">📷 加照片</button>`;
+
+      html += `
+        <div class="list-item ${s.bought ? "done" : ""}" onclick="toggleShopping(${s.id})">
+          <div class="list-check" style="align-self:flex-start;margin-top:2px"><span class="list-check-mark">✓</span></div>
+          <div class="shop-content">
+            <span class="list-label">${s.text}</span>
+            ${s.location ? `<div class="shop-location">📍 ${s.location}</div>` : ""}
+            ${thumbsHtml}
+          </div>
+          <div class="shop-actions">
+            <button class="edit-btn" onclick="event.stopPropagation();startEditShopping(${s.id})">✏️</button>
+          </div>
+        </div>`;
+    }
+  });
+
+  if (showShoppingInput) {
+    const pendingThumbsHtml = pendingShoppingPhotos.length
+      ? `<div class="shop-photos" style="margin:6px 0 2px">
+          ${pendingShoppingPhotos.map((p, i) => `
+            <div class="shop-thumb-wrap">
+              <img class="shop-thumb" src="${p.data}">
+              <button class="shop-thumb-del" onclick="deletePendingPhoto(${i})">✕</button>
+            </div>`).join("")}
+          ${pendingShoppingPhotos.length < 3
+            ? `<button class="shop-photo-add" onclick="openPendingPhotoPicker()">📷</button>`
+            : ""}
+        </div>`
+      : "";
+    html += `
+      <div class="add-row add-row-col">
+        <input id="shop-input" type="text" placeholder="商品名稱..."
+               onkeydown="if(event.key==='Enter')document.getElementById('shop-loc-input').focus()">
+        <input id="shop-loc-input" type="text" placeholder="📍 可能購買的地點（選填）"
+               onkeydown="if(event.key==='Enter')addShopping(document.getElementById('shop-input').value,this.value)">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          ${pendingShoppingPhotos.length === 0
+            ? `<button class="shop-photo-add-inline" onclick="openPendingPhotoPicker()">📷 加照片</button>`
+            : ""}
+          ${pendingThumbsHtml}
+        </div>
+        <div class="add-row-buttons">
+          <button class="add-row-btn" style="flex:1"
+                  onclick="addShopping(document.getElementById('shop-input').value,document.getElementById('shop-loc-input').value)">新增</button>
+          <button class="del-btn" onclick="showShoppingInput=false;pendingShoppingPhotos=[];renderShopping()">✕</button>
+        </div>
+      </div>`;
+    setTimeout(() => document.getElementById("shop-input")?.focus(), 50);
+  } else {
+    html += `<button class="add-trigger" style="border-color:#f0d4dc;color:var(--pink)" onclick="showShoppingInput=true;renderShopping()">＋ 新增購物項目</button>`;
+  }
+
+  document.getElementById("tab-checklist-content").innerHTML = html;
+}
+
+// ─── Render: Meeting ──────────────────────────────────────────────
+
+function renderMeeting() {
+  const el = document.getElementById("tab-meeting");
+
+  // Firebase not configured → show setup guide
+  if (!firebaseReady) {
+    el.innerHTML = `
+      <div class="setup-card">
+        <div class="setup-title">🔔 集合通知</div>
+        <div class="setup-sub">設定後，任何人輸入集合時間，大家的手機即時顯示倒數計時。<br>需要 5 分鐘完成 Firebase 免費設定。</div>
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            前往 <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a><br>
+            建立新專案（免費）→ 建立 Realtime Database（選 Asia-Southeast1）→ 規則改為：
+            <div class="step-code">{\n  "rules": {\n    "tohoku2026": {\n      ".read": true,\n      ".write": true\n    }\n  }\n}</div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            在 Firebase 專案設定 → 「你的應用程式」→ 新增 Web 應用程式<br>
+            複製 firebaseConfig 裡的所有值
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            打開 <strong>index.html</strong>，找到以下段落並填入你的值：
+            <div class="step-code">const FIREBASE_CONFIG = {\n  apiKey: "填入你的 apiKey",\n  databaseURL: "填入你的 databaseURL",\n  projectId: "填入你的 projectId",\n  appId: "填入你的 appId"\n};</div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            存檔重新部署，集合功能就啟用了 🎉
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  let html = "";
+
+  // Active meeting display
+  if (currentMeeting && !showForm) {
+    const c = calcCountdown(currentMeeting.time);
+    html += `
+      <div class="meeting-active-card">
+        <div class="meeting-label">🔔 集合通知</div>
+        <div class="meeting-clock${c ? "" : " passed"}" id="meeting-clock">${fmtCountdown(c)}</div>
+        <div class="meeting-time-row">
+          <span>⏰</span>
+          <span>${currentMeeting.time} 集合</span>
+        </div>
+        ${currentMeeting.message ? `<div class="meeting-msg">📍 ${currentMeeting.message}</div>` : ""}
+        ${currentMeeting.setBy   ? `<div class="meeting-by">由 ${currentMeeting.setBy} 設定</div>` : ""}
+      </div>
+      <div class="meeting-actions">
+        <button class="btn btn-outline" onclick="showMeetingForm()">✏️ 更新時間</button>
+        <button class="btn btn-danger"  onclick="clearMeeting()">✕ 取消集合</button>
+      </div>`;
+  }
+
+  // No meeting
+  if (!currentMeeting && !showForm) {
+    html += `
+      <div class="meeting-empty">
+        <div class="meeting-empty-icon">🔕</div>
+        <div class="meeting-empty-text">目前無集合通知</div>
+        <div class="meeting-empty-sub">設定後所有人的手機即時顯示倒數</div>
+      </div>`;
+  }
+
+  // Form
+  if (showForm || !currentMeeting) {
+    const savedName = localStorage.getItem("meetingName") || "";
+    const currTime  = currentMeeting ? currentMeeting.time : "";
+    const currMsg   = currentMeeting ? currentMeeting.message : "";
+    html += `
+      <div class="meeting-form-card">
+        <div class="form-title">設定集合時間</div>
+        <div class="form-row">
+          <div class="form-label">集合時間</div>
+          <input class="form-input" type="time" id="m-time" value="${currTime}">
+        </div>
+        <div class="form-row">
+          <div class="form-label">備註（選填）</div>
+          <input class="form-input" type="text" id="m-msg" value="${currMsg}" placeholder="例：在 7-11 旁邊等">
+        </div>
+        <div class="form-row">
+          <div class="form-label">你的名字（選填）</div>
+          <input class="form-input" type="text" id="m-by" value="${savedName}" placeholder="例：鄭婷宇">
+        </div>
+        <div class="form-actions">
+          ${showForm ? `<button class="btn btn-outline" onclick="hideMeetingForm()">取消</button>` : ""}
+          <button class="btn btn-primary" onclick="submitMeeting()">🔔 送出通知</button>
+        </div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:10px;line-height:1.5;">
+          💡 送出後會請求通知權限。請保持此頁面在瀏覽器中開著，集合時間到時會響鈴並震動。
+        </div>
+      </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ─── Messages ─────────────────────────────────────────────────────
+
+function relativeTime(ts) {
+  const diff = Date.now() - ts;
+  const min  = Math.floor(diff / 60000);
+  const hr   = Math.floor(diff / 3600000);
+  const day  = Math.floor(diff / 86400000);
+  if (min < 1)  return "剛才";
+  if (min < 60) return `${min} 分鐘前`;
+  if (hr  < 24) return `${hr} 小時前`;
+  if (day <  7) return `${day} 天前`;
+  const d = new Date(ts);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function getDayLabel(day) {
+  if (day === 0) return "整趟旅程";
+  const d = DAYS.find(x => x.day === day);
+  return d ? `第 ${day} 天・${d.date}（${d.wd}）${d.theme}` : `第 ${day} 天`;
+}
+
+function getMemberAvatar(name) {
+  const m = MEMBERS.find(m => m.name === name);
+  return m ? m.avatar : "💬";
+}
+
+function renderMessages() {
+  const el = document.getElementById("tab-messages");
+  if (!el) return;
+
+  let html = `<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>`;
+
+  if (allMessages.length === 0) {
+    html += `
+      <div class="msg-empty">
+        <div class="msg-empty-icon">💬</div>
+        <div class="msg-empty-text">還沒有留言</div>
+        <div class="msg-empty-sub">快來說說今天的感受吧！🌸</div>
+      </div>`;
+  } else {
+    const groups = {};
+    allMessages.forEach(m => {
+      if (!groups[m.day]) groups[m.day] = [];
+      groups[m.day].push(m);
+    });
+    const sortedKeys = Object.keys(groups).sort((a, b) => {
+      if (Number(a) === 0) return 1;
+      if (Number(b) === 0) return -1;
+      return Number(a) - Number(b);
+    });
+    sortedKeys.forEach(day => {
+      html += `<div class="msg-day-group">`;
+      html += `<div class="msg-day-label">${getDayLabel(Number(day))}</div>`;
+      groups[day].forEach(m => {
+        const safeText = String(m.text)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/\n/g, "<br>");
+        html += `
+          <div class="msg-card">
+            <div class="msg-header">
+              <div class="msg-avatar">${getMemberAvatar(m.name)}</div>
+              <div class="msg-name">${m.name}</div>
+              <div class="msg-time">${relativeTime(m.timestamp)}</div>
+              <div class="msg-actions">
+                <button class="msg-action-btn msg-edit-btn" onclick="editMessage('${m._key}')">✏️ 改</button>
+                <button class="msg-action-btn msg-del-btn"  onclick="deleteMessage('${m._key}')">🗑️</button>
+              </div>
+            </div>
+            <div class="msg-text">${safeText}</div>
+          </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function showMsgForm() {
+  msgEditKey = null;
+  document.getElementById("msg-form-title").textContent = "💬 新增留言";
+  document.getElementById("msg-overlay").classList.add("visible");
+  renderMsgFormBody();
+}
+
+function editMessage(key) {
+  const m = allMessages.find(x => x._key === key);
+  if (!m) return;
+  msgEditKey  = key;
+  msgFormDay  = m.day;
+  msgFormName = m.name;
+  document.getElementById("msg-form-title").textContent = "✏️ 編輯留言";
+  document.getElementById("msg-overlay").classList.add("visible");
+  renderMsgFormBody(m.text);
+}
+
+function deleteMessage(key) {
+  if (!firebaseReady) return;
+  if (!confirm("確定刪除這則留言？")) return;
+  firebase.database().ref(MSG_PATH + "/" + key).remove();
+}
+
+function hideMsgForm() {
+  document.getElementById("msg-overlay").classList.remove("visible");
+  msgEditKey = null;
+}
+
+function selectMsgDay(day) {
+  msgFormDay = day;
+  renderMsgFormBody();
+}
+
+function selectMsgMember(idx) {
+  msgFormName = MEMBERS[idx].name;
+  const input = document.getElementById("msg-name-input");
+  if (input) input.value = msgFormName;
+  renderMsgFormBody();
+}
+
+function renderMsgFormBody(prefillText) {
+  const dayPills = [
+    { day: 0, label: "整趟旅程" },
+    ...DAYS.map(d => ({ day: d.day, label: `第 ${d.day} 天` }))
+  ].map(p =>
+    `<button class="day-pill${msgFormDay === p.day ? " selected" : ""}" onclick="selectMsgDay(${p.day})">${p.label}</button>`
+  ).join("");
+
+  const memberPills = MEMBERS.map((m, i) =>
+    `<button class="member-pill${msgFormName === m.name ? " selected" : ""}" onclick="selectMsgMember(${i})">${m.avatar} ${m.name}</button>`
+  ).join("");
+
+  const savedText = prefillText !== undefined ? prefillText : (document.getElementById("msg-text-input")?.value || "");
+
+  document.getElementById("msg-form-body").innerHTML = `
+    <div class="form-row">
+      <div class="form-label">關於哪一天？</div>
+      <div class="day-picker">${dayPills}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">你是誰？</div>
+      <div class="member-picker">${memberPills}</div>
+      <input class="form-input" type="text" id="msg-name-input"
+             value="${msgFormName}" placeholder="或自行輸入名字"
+             oninput="msgFormName=this.value">
+    </div>
+    <div class="form-row">
+      <div class="form-label">留言內容</div>
+      <textarea class="form-input" id="msg-text-input" rows="4"
+                placeholder="寫下今天的感受、推薦的景點或餐廳…"
+                style="resize:none;line-height:1.7">${savedText}</textarea>
+    </div>
+    <button class="btn btn-pink" style="width:100%;font-size:16px;padding:16px;margin-top:4px" onclick="submitMessage()">💬 送出留言</button>
+  `;
+}
+
+function submitMessage() {
+  const name = (document.getElementById("msg-name-input")?.value || "").trim();
+  const text = (document.getElementById("msg-text-input")?.value || "").trim();
+  if (!name) { alert("請輸入你的名字"); return; }
+  if (!text) { alert("請輸入留言內容"); return; }
+  if (!firebaseReady) { alert("目前無法連線，請稍後再試"); return; }
+  localStorage.setItem("messageName", name);
+  if (msgEditKey) {
+    firebase.database().ref(MSG_PATH + "/" + msgEditKey).update({ text, name, day: msgFormDay });
+  } else {
+    firebase.database().ref(MSG_PATH).push({ day: msgFormDay, name, text, timestamp: Date.now() });
+  }
+  hideMsgForm();
+}
+
+// ─── Expenses ─────────────────────────────────────────────────────
+
+function renderExpenses() {
+  const el = document.getElementById("tab-expenses");
+  if (!el) return;
+  if (expShowSettle) { renderSettlement(el); return; }
+
+  let html = `
+    <div class="exp-top-row">
+      <button class="exp-add-btn" onclick="showExpForm()">＋ 新增記帳</button>
+      <button class="exp-settle-btn" onclick="expShowSettle=true;renderExpenses()">🧮 結算</button>
+    </div>`;
+
+  if (allExpenses.length === 0) {
+    if (!firebaseReady) {
+      html += `<div class="msg-empty">
+        <div class="msg-empty-icon">💰</div>
+        <div class="msg-empty-text">記帳需要 Firebase 連線</div>
+        <div class="msg-empty-sub">Firebase 連線後即可使用，資料全員共享</div>
+      </div>`;
+    } else {
+      html += `<div class="msg-empty">
+        <div class="msg-empty-icon">💰</div>
+        <div class="msg-empty-text">還沒有記帳</div>
+        <div class="msg-empty-sub">記錄大家的消費，旅程結束後一鍵結算 🧮</div>
+      </div>`;
+    }
+  } else {
+    const jpy = allExpenses.filter(e => e.currency === "JPY");
+    const twd = allExpenses.filter(e => e.currency === "TWD");
+
+    if (jpy.length > 0) {
+      html += `<div class="exp-currency-header">💴 日圓 JPY</div>`;
+      jpy.forEach(e => {
+        const forLabel = e.forWhom.length === MEMBERS.length ? "全員分擔" : e.forWhom.join("、");
+        const share = Math.round(e.amount / e.forWhom.length);
+        html += `
+          <div class="exp-card">
+            <div class="exp-card-left">
+              <div class="exp-payer">${getMemberAvatar(e.payer)} ${e.payer}</div>
+              <div class="exp-for">幫 ${forLabel} 付・每人 ¥${share.toLocaleString()}</div>
+              ${e.note ? `<div class="exp-note">📝 ${e.note}</div>` : ""}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+              <div class="exp-amount">¥${e.amount.toLocaleString()}</div>
+              <div style="display:flex;gap:4px">
+                <button class="edit-btn" onclick="editExpense('${e._key}')">✏️</button>
+                <button class="exp-del-btn" onclick="deleteExpense('${e._key}')">✕</button>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+
+    if (twd.length > 0) {
+      html += `<div class="exp-currency-header" style="margin-top:${jpy.length>0?'16px':'0'}">💵 台幣 TWD</div>`;
+      twd.forEach(e => {
+        const forLabel = e.forWhom.length === MEMBERS.length ? "全員分擔" : e.forWhom.join("、");
+        const share = Math.round(e.amount / e.forWhom.length);
+        html += `
+          <div class="exp-card">
+            <div class="exp-card-left">
+              <div class="exp-payer">${getMemberAvatar(e.payer)} ${e.payer}</div>
+              <div class="exp-for">幫 ${forLabel} 付・每人 $${share.toLocaleString()}</div>
+              ${e.note ? `<div class="exp-note">📝 ${e.note}</div>` : ""}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+              <div class="exp-amount">$${e.amount.toLocaleString()}</div>
+              <div style="display:flex;gap:4px">
+                <button class="edit-btn" onclick="editExpense('${e._key}')">✏️</button>
+                <button class="exp-del-btn" onclick="deleteExpense('${e._key}')">✕</button>
+              </div>
+            </div>
+          </div>`;
+      });
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function renderSettlement(el) {
+  let html = `
+    <div class="exp-top-row">
+      <button class="exp-add-btn" style="flex:1" onclick="expShowSettle=false;renderExpenses()">← 記帳清單</button>
+      <button class="exp-settle-btn active" style="flex:1">🧮 結算</button>
+    </div>`;
+
+  if (allExpenses.length === 0) {
+    html += `<div style="text-align:center;padding:32px 0;color:var(--text-3);font-size:14px">還沒有記帳紀錄</div>`;
+    el.innerHTML = html; return;
+  }
+
+  ["JPY", "TWD"].forEach(currency => {
+    const expenses = allExpenses.filter(e => e.currency === currency);
+    if (expenses.length === 0) return;
+    const symbol = currency === "JPY" ? "¥" : "$";
+    const label  = currency === "JPY" ? "💴 日圓 JPY 結算" : "💵 台幣 TWD 結算";
+    const txns   = calcSettlement(expenses);
+    const total  = expenses.reduce((s, e) => s + e.amount, 0);
+
+    html += `<div class="settle-card">`;
+    html += `<div class="settle-title">${label}・共 ${symbol}${total.toLocaleString()}</div>`;
+    if (txns.length === 0) {
+      html += `<div class="settle-even">✅ 大家已平衡，不需轉帳</div>`;
+    } else {
+      txns.forEach(t => {
+        html += `
+          <div class="settle-row">
+            <span class="settle-from">${getMemberAvatar(t.from)} ${t.from}</span>
+            <span style="color:var(--text-3);font-size:12px">還給</span>
+            <span class="settle-to">${getMemberAvatar(t.to)} ${t.to}</span>
+            <span class="settle-amount">${symbol}${t.amount.toLocaleString()}</span>
+          </div>`;
+      });
+    }
+    html += `</div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function calcSettlement(expenses) {
+  const bal = {};
+  MEMBERS.forEach(m => { bal[m.name] = 0; });
+  expenses.forEach(e => {
+    const share = e.amount / e.forWhom.length;
+    e.forWhom.forEach(name => { bal[name] = (bal[name] || 0) - share; });
+    bal[e.payer] = (bal[e.payer] || 0) + e.amount;
+  });
+  Object.keys(bal).forEach(k => { bal[k] = Math.round(bal[k]); });
+
+  const creditors = Object.entries(bal).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+  const debtors   = Object.entries(bal).filter(([,v]) => v < 0).sort((a,b) => a[1]-b[1]);
+  const txns = [];
+  let ci = 0, di = 0;
+  while (ci < creditors.length && di < debtors.length) {
+    const amount = Math.min(creditors[ci][1], -debtors[di][1]);
+    if (amount > 0) txns.push({ from: debtors[di][0], to: creditors[ci][0], amount });
+    creditors[ci][1] -= amount;
+    debtors[di][1]   += amount;
+    if (creditors[ci][1] <= 0) ci++;
+    if (debtors[di][1]  >= 0) di++;
+  }
+  return txns;
+}
+
+function showExpForm(expense) {
+  if (expense) {
+    expEditKey      = expense._key;
+    expFormCurrency = expense.currency;
+    expFormPayer    = expense.payer;
+    expFormForWhom  = new Set(expense.forWhom);
+  } else {
+    expEditKey     = null;
+    expFormForWhom = new Set(MEMBERS.map(m => m.name));
+    expFormPayer   = "";
+  }
+  document.getElementById("exp-form-title").textContent = expense ? "✏️ 編輯記帳" : "💰 新增記帳";
+  document.getElementById("exp-overlay").classList.add("visible");
+  renderExpFormBody(expense);
+}
+
+function editExpense(key) {
+  const e = allExpenses.find(x => x._key === key);
+  if (e) showExpForm(e);
+}
+
+function hideExpForm() {
+  document.getElementById("exp-overlay").classList.remove("visible");
+  expEditKey = null;
+}
+
+function selectExpCurrency(c) { expFormCurrency = c; renderExpFormBody(); }
+function selectExpPayer(idx)   { expFormPayer = MEMBERS[idx].name; renderExpFormBody(); }
+function toggleExpForWhom(idx) {
+  const name = MEMBERS[idx].name;
+  expFormForWhom.has(name) ? expFormForWhom.delete(name) : expFormForWhom.add(name);
+  renderExpFormBody();
+}
+function selectAllExpForWhom() {
+  if (expFormForWhom.size === MEMBERS.length) expFormForWhom.clear();
+  else MEMBERS.forEach(m => expFormForWhom.add(m.name));
+  renderExpFormBody();
+}
+
+function renderExpFormBody(prefill) {
+  const currBtns = [
+    { c: "JPY", label: "💴 日圓 JPY" },
+    { c: "TWD", label: "💵 台幣 TWD" },
+  ].map(b =>
+    `<button class="currency-btn${expFormCurrency===b.c?" selected":""}" onclick="selectExpCurrency('${b.c}')">${b.label}</button>`
+  ).join("");
+
+  const payerPills = MEMBERS.map((m,i) =>
+    `<button class="member-pill${expFormPayer===m.name?" selected":""}" onclick="selectExpPayer(${i})">${m.avatar} ${m.name}</button>`
+  ).join("");
+
+  const allSel = expFormForWhom.size === MEMBERS.length;
+  const forPills = MEMBERS.map((m,i) =>
+    `<button class="member-pill${expFormForWhom.has(m.name)?" selected":""}" onclick="toggleExpForWhom(${i})">${m.avatar} ${m.name}</button>`
+  ).join("");
+
+  const savedAmount = prefill ? prefill.amount : (document.getElementById("exp-amount-input")?.value || "");
+  const savedNote   = prefill ? (prefill.note || "") : (document.getElementById("exp-note-input")?.value || "");
+  const sym = expFormCurrency === "JPY" ? "¥" : "$";
+
+  document.getElementById("exp-form-body").innerHTML = `
+    <div class="form-row">
+      <div class="form-label">幣別</div>
+      <div class="currency-toggle">${currBtns}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">誰付？</div>
+      <div class="member-picker">${payerPills}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">幫誰分擔？</div>
+      <button class="select-all-btn" onclick="selectAllExpForWhom()">${allSel ? "✓ 取消全選" : "☑ 全選"}</button>
+      <div class="for-whom-grid">${forPills}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-label">金額（${sym}）</div>
+      <input class="form-input" type="number" id="exp-amount-input" value="${savedAmount}"
+             placeholder="輸入金額" inputmode="numeric" min="1" style="font-size:20px;font-weight:700">
+    </div>
+    <div class="form-row">
+      <div class="form-label">備註（選填）</div>
+      <input class="form-input" type="text" id="exp-note-input" value="${savedNote}"
+             placeholder="例：午餐、電車票、門票">
+    </div>
+    <button class="btn btn-pink" style="width:100%;font-size:16px;padding:16px;margin-top:4px" onclick="submitExpense()">💰 送出記帳</button>
+  `;
+}
+
+function submitExpense() {
+  if (!expFormPayer)          { alert("請選擇付款人");   return; }
+  if (expFormForWhom.size===0){ alert("請選擇分擔成員"); return; }
+  const amount = parseInt(document.getElementById("exp-amount-input")?.value || "0", 10);
+  if (!amount || amount <= 0) { alert("請輸入金額");     return; }
+  const note = (document.getElementById("exp-note-input")?.value || "").trim();
+  if (!firebaseReady) { alert("目前無法連線，請稍後再試"); return; }
+  const payload = {
+    currency: expFormCurrency,
+    payer:    expFormPayer,
+    forWhom:  [...expFormForWhom],
+    amount,
+    note
+  };
+  if (expEditKey) {
+    firebase.database().ref(EXP_PATH + "/" + expEditKey).update(payload);
+  } else {
+    firebase.database().ref(EXP_PATH).push({ ...payload, timestamp: Date.now() });
+  }
+  hideExpForm();
+}
+
+function deleteExpense(key) {
+  if (!firebaseReady) return;
+  if (!confirm("確定刪除這筆記帳？")) return;
+  firebase.database().ref(EXP_PATH + "/" + key).remove();
+}
+
+// ─── Countdown (trip) ─────────────────────────────────────────────
+
+function updateCountdown() {
+  const now   = new Date(); now.setHours(0,0,0,0);
+  const start = new Date(2026, 3, 15);
+  const end   = new Date(2026, 3, 22);
+  const diff  = Math.round((start - now) / 86400000);
+  const n = document.getElementById("cd-num");
+  const l = document.getElementById("cd-label");
+  if      (diff > 0)             { n.textContent = diff;    l.textContent = "天後出發"; }
+  else if (now >= start && now <= end) { n.textContent = "旅途中"; l.textContent = "🌸"; }
+  else                           { n.textContent = "已結束"; l.textContent = "回味中 🫶"; }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────
+
+initFontSize();
+updateCountdown();
+renderItinerary();
+renderChecklist();
+renderMeeting();
+renderMessages();
+renderExpenses();
+initFirebase();
+adjustLayout();
+window.addEventListener("resize", adjustLayout);
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
