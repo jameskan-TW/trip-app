@@ -116,13 +116,28 @@ trip-app/
 
 **部署前 checklist**：
 - [ ] Firebase 設定（`FIREBASE_CONFIG`）已填入正確值
-- [ ] `sw.js` cache key（目前 `tohoku2026-v5`）如有改動重大功能需升版
+- [ ] `sw.js` cache key（目前 `tohoku2026-v6`）升版（見下方說明）
 - [ ] 確認 `DAYS` 資料、`HOTELS`、`RESTAURANTS` 內容正確
+
+### ⚠️ 部署後手機沒更新？Service Worker 快取問題
+
+PWA 會把 `index.html` 快取在手機上，即使重新部署，手機仍會讀舊版。
+
+**每次部署前，必須把 `sw.js` 第一行的版號加一：**
+
+```js
+// 部署前改這裡，例如 v6 → v7
+const CACHE = "tohoku2026-v7";
+```
+
+瀏覽器偵測到 `sw.js` 有變動，就會自動清掉舊快取、下載新版。
+
+用戶端若還是看到舊版：關掉所有分頁 → 重新開啟連結。
 
 ---
 
 ## 待處理 / 未來可改善
 
 - [ ] 購物清單相片目前存在 localStorage（base64），項目多時可能超出儲存限制（約 5 MB），未來可考慮改用 Firebase Storage
-- [ ] Service Worker 目前為 cache-first，部署新版後用戶需手動重整才能取得更新，可考慮加入版本提示
+- [ ] Service Worker 快取問題已知解法：每次部署前升版 `sw.js` 的 `CACHE` 版號（已記錄在部署 checklist）
 - [ ] 打包清單的自訂項目目前只能編輯文字，可考慮支援刪除確認（避免誤刪）
