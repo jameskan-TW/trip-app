@@ -145,6 +145,44 @@
     #tab-checklist-content { padding: 12px 16px 24px; }
 
 
+
+    /* ─── Room Assignment Table ───────────────────────────── */
+    .room-table-wrap {
+      margin: 10px 0 4px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .room-table-title {
+      font-size: 12px; font-weight: 700; color: var(--text-2);
+      padding: 7px 12px; background: var(--pink-pale);
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; user-select: none;
+    }
+    .room-table-title .rt-toggle { font-size: 11px; color: var(--text-3); }
+    .room-table-body { display: none; }
+    .room-table-body.open { display: block; }
+    .room-row {
+      display: flex; align-items: stretch;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .room-name {
+      width: 96px; min-width: 96px; padding: 7px 8px;
+      font-weight: 600; color: var(--text-2);
+      background: var(--pink-pale); display: flex; align-items: center;
+    }
+    .room-members {
+      flex: 1; padding: 6px 10px; display: flex;
+      flex-wrap: wrap; gap: 4px; align-items: center;
+    }
+    .room-member-tag {
+      background: white; border: 1px solid var(--border);
+      border-radius: 20px; padding: 2px 8px;
+      font-size: 11px; color: var(--text-2);
+    }
+    .room-note { font-size: 10px; color: var(--text-3); padding: 4px 12px 6px; background: var(--pink-pale); }
+
     /* ─── Help Cards ──────────────────────────────────────── */
     .help-card {
       background: linear-gradient(135deg, #fff5f8 0%, #ffeef3 100%);
@@ -1122,6 +1160,16 @@ const HOTELS = [
   { nights: ["4/23","4/24","4/25"], name: "Minn 葛西", loc: "東京都・葛西", note: "各自確認入住", paid: false, map: "https://maps.app.goo.gl/GzCiXEZALT7Ho49v8" },
 ];
 
+const ROOM_ASSIGNMENTS = [
+  { room: "甘家四人房",     color: "#e8f5e9", members: ["甘順基", "王新恩", "甘語行", "甘語安"] },
+  { room: "姊妹四人房 1",   color: "#fce4ec", members: ["吳汶靜", "張皓雅", "鍾愛", "呂柔蒨"] },
+  { room: "姊妹四人房 2",   color: "#fce4ec", members: ["葉倢妤", "曾子榆", "吳雨桐 ²", "江至美 ²"] },
+  { room: "姊妹四人房 3",   color: "#fce4ec", members: ["戴采薰", "呂妍心", "高語謙", "梁凱婷"] },
+  { room: "弟兄四人房",     color: "#e3f2fd", members: ["彭柏愷", "蔡旻翰", "王麒竣"] },
+  { room: "三人房 ²",       color: "#fff3e0", members: ["沈以恩", "張若筠"] },
+];
+// ² = 兩晚
+
 const MEMBERS = [
   { name: "戴采薰", avatar: "🌸" }, { name: "甘順基", avatar: "👑" },
   { name: "呂柔蒨", avatar: "💛" }, { name: "沈以恩", avatar: "🌟" },
@@ -1741,7 +1789,19 @@ function renderItinerary() {
           </div>
         </div>
         ${d.hotel.map ? `<a class="map-btn" href="${mapUrl(d.hotel.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
-      </div>` : "";
+      </div>
+      ${ROOM_ASSIGNMENTS.length > 0 ? `<div class="room-table-wrap">
+        <div class="room-table-title" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.rt-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+          🛏️ 房間分配表 <span class="rt-toggle">▼</span>
+        </div>
+        <div class="room-table-body">
+          ${ROOM_ASSIGNMENTS.map(r => `<div class="room-row">
+            <div class="room-name">${r.room}</div>
+            <div class="room-members">${r.members.map(m => `<span class="room-member-tag">${m}</span>`).join('')}</div>
+          </div>`).join('')}
+          <div class="room-note">² 吳雨桐・江至美・沈以恩・張若筠 住宿兩晚</div>
+        </div>
+      </div>` : ""}` : "";
 
     const restaurantHtml = (() => {
       const rests = RESTAURANTS[d.day];
@@ -1863,12 +1923,12 @@ function renderChecklist() {
     '右下角 ＋ 可以自行新增項目',
     '打勾紀錄存在你自己的手機，不影響他人'
   ]);
-  document.getElementById("tab-checklist").innerHTML = checkHelp + `
+  document.getElementById("tab-checklist").innerHTML = checkHelp + \`
     <div class="checklist-tabs">
       <button class="checklist-tab-btn \${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
       <button class="checklist-tab-btn \${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
     </div>
-    <div id="tab-checklist-content"></div>`;
+    <div id="tab-checklist-content"></div>\`;
   if (p) renderPacking(); else renderShopping();
 }
 
@@ -2392,7 +2452,7 @@ function renderMessages() {
     '所有人的留言即時同步，大家都看得到',
     '長按留言可以編輯或刪除（限本人）'
   ]);
-  let html = msgHelp + `<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>`;
+  let html = msgHelp + \`<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>\`;
 
   if (allMessages.length === 0) {
     html += `
@@ -2545,11 +2605,11 @@ function renderExpenses() {
     '點「🧮 結算」可以看每個人應付/應收多少',
     '記帳資料即時同步，全員可見'
   ]);
-  let html = expHelp + `
+  let html = expHelp + \`
     <div class="exp-top-row">
       <button class="exp-add-btn" onclick="showExpForm()">＋ 新增記帳</button>
       <button class="exp-settle-btn" onclick="expShowSettle=true;renderExpenses()">🧮 結算</button>
-    </div>`;
+    </div>\`;
 
   if (allExpenses.length === 0) {
     if (!firebaseReady) {
