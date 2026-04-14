@@ -1,4 +1,4 @@
-const CACHE = "tohoku2026-v5";
+const CACHE = "tohoku2026-v6";
 const ASSETS = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", e => {
