@@ -249,10 +249,6 @@
       font-size: 11px; font-weight: 700; color: var(--pink);
       background: var(--pink-pale); border-radius: 6px; padding: 2px 8px; white-space: nowrap;
     }
-    .guide-link-btn {
-      background: linear-gradient(135deg, #f59e0b, #f97316) !important;
-      color: white !important;
-    }
     .map-btn {
       display: flex; align-items: center; gap: 3px;
       background: var(--pink-pale); color: var(--pink);
@@ -1093,8 +1089,9 @@ const DAYS = [
   {
     day: 3, date: "4/25", wd: "六", theme: "東京迪士尼樂園", emoji: "🏰",
     acts: [
-      { icon: "🌅", name: "早出發！迪士尼開園", sub: "建議 09:00 前到達，提早排隊搶設施", time: "09:00", map: "東京ディズニーランド" },
-      { icon: "🎢", name: "各組分頭暢玩", sub: "依分組攻略遊玩設施", map: "東京ディズニーランド" },
+      { icon: "📖", name: "迪士尼全日攻略簡報", sub: "點右側按鈕查看完整攻略、設施推薦、分組名單", link: "https://docs.google.com/presentation/d/1JXThHilXWJY0nagJ8VvI55k8TbTNxmrW/edit", linkLabel: "📖 攻略" },
+      { icon: "🚖", name: "分組搭計程車前往迪士尼", sub: "⚠️ 06:00 要搭上車！", time: "06:00" },
+      { icon: "🎢", name: "06:30 進入排隊隊伍", sub: "提早排隊搶熱門設施", time: "06:30", map: "東京ディズニーランド" },
       { icon: "🎆", name: "夜間遊行 & 煙火", sub: "晚間夜間娛樂節目", time: "20:00", map: "東京ディズニーランド" },
     ],
     hotel: { name: "Minn 葛西", note: "", paid: false, map: "https://maps.app.goo.gl/GzCiXEZALT7Ho49v8" },
@@ -1724,7 +1721,7 @@ function renderItinerary() {
         </div>
         <div class="act-right">
           ${a.time ? `<span class="time-tag">${a.time}</span>` : ""}
-          ${a.link ? `<a class="map-btn guide-link-btn" href="${a.link}" target="_blank" rel="noopener">${a.linkLabel || "🔗 連結"}</a>` : ""}
+          ${a.link ? `<a class="map-btn guide-link-btn" href="${a.link}" target="_blank" rel="noopener">${a.linkLabel || "🔗"}</a>` : ""}
           ${a.map  ? `<a class="map-btn" href="${mapUrl(a.map)}" target="_blank" rel="noopener">🗺 地圖</a>` : ""}
         </div>
       </div>`).join("");
