@@ -1624,7 +1624,7 @@ async function loadWeatherStrip() {
     await Promise.all(uniqueLocs.map(async loc => {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
         `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
-        `&start_date=2026-04-15&end_date=2026-04-22&timezone=Asia%2FTokyo`;
+        `&start_date=2026-04-23&end_date=2026-04-26&timezone=Asia%2FTokyo`;
       const res = await fetch(url);
       const data = await res.json();
       data.daily.time.forEach((isoDate, i) => {
