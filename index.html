@@ -1863,12 +1863,12 @@ function renderChecklist() {
     '右下角 ＋ 可以自行新增項目',
     '打勾紀錄存在你自己的手機，不影響他人'
   ]);
-  document.getElementById("tab-checklist").innerHTML = checkHelp + \`
+  document.getElementById("tab-checklist").innerHTML = checkHelp + `
     <div class="checklist-tabs">
       <button class="checklist-tab-btn \${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
       <button class="checklist-tab-btn \${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
     </div>
-    <div id="tab-checklist-content"></div>\`;
+    <div id="tab-checklist-content"></div>`;
   if (p) renderPacking(); else renderShopping();
 }
 
@@ -2392,7 +2392,7 @@ function renderMessages() {
     '所有人的留言即時同步，大家都看得到',
     '長按留言可以編輯或刪除（限本人）'
   ]);
-  let html = msgHelp + \`<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>\`;
+  let html = msgHelp + `<button class="msg-add-btn" onclick="showMsgForm()">＋ 新增留言</button>`;
 
   if (allMessages.length === 0) {
     html += `
@@ -2545,11 +2545,11 @@ function renderExpenses() {
     '點「🧮 結算」可以看每個人應付/應收多少',
     '記帳資料即時同步，全員可見'
   ]);
-  let html = expHelp + \`
+  let html = expHelp + `
     <div class="exp-top-row">
       <button class="exp-add-btn" onclick="showExpForm()">＋ 新增記帳</button>
       <button class="exp-settle-btn" onclick="expShowSettle=true;renderExpenses()">🧮 結算</button>
-    </div>\`;
+    </div>`;
 
   if (allExpenses.length === 0) {
     if (!firebaseReady) {
