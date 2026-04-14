@@ -1064,33 +1064,32 @@
 
 const DAYS = [
   {
-    day: 1, date: "4/23", wd: "四", theme: "抵達東京", emoji: "✈️",
+    day: 1, date: "4/23", wd: "四", theme: "抵達東京・晚餐集合", emoji: "✈️",
     acts: [
       { icon: "✈️", name: "【凌晨組】桃園出發", sub: "GK012 捷星 / MM620 樂桃 02:00-02:40 出發", time: "02:00" },
       { icon: "🛬", name: "【凌晨組】成田機場抵達", sub: "成田 T1/T3・06:30-07:00 抵達", time: "06:30", map: "成田国際空港" },
       { icon: "✈️", name: "【白天組】BR184 長榮出發", sub: "桃園T2 07:55 → 成田T1 12:25", time: "07:55" },
       { icon: "✈️", name: "【甘家】華航出發", sub: "松山 09:00 → 羽田 13:10", time: "09:00" },
-      { icon: "🍽️", name: "晚餐・葛西 彦酉", sub: "週四大家吃飯地點", time: "19:00", map: "https://maps.app.goo.gl/ZSGfAVEjDpc6P7Eg9" },
+      { icon: "🚶", name: "下飛機自由行", sub: "各自抵達後自由探索，check-in 住宿" },
+      { icon: "🍽️", name: "全員晚餐集合・葛西 彦酉", sub: "20:00 準時集合，請勿遲到！", time: "20:00", map: "https://maps.app.goo.gl/ZSGfAVEjDpc6P7Eg9" },
     ],
     hotel: { name: "Minn 葛西", note: "各自 check-in", paid: false, map: "https://maps.app.goo.gl/GzCiXEZALT7Ho49v8" },
     flight: { label: "去程各組航班", from: "TPE/TSA", fromCity: "台灣", to: "NRT/HND", toCity: "東京", dept: "02:00~", arr: "06:30~", num: "多班次" }
   },
   {
-    day: 2, date: "4/24", wd: "五", theme: "東京自由行", emoji: "🗼",
+    day: 2, date: "4/24", wd: "五", theme: "迪士尼先鋒 & 自由行", emoji: "🗼",
     acts: [
       { icon: "✈️", name: "【週五直衝組1】抵達東京", sub: "IT216 00:10桃園 → 04:25羽田", time: "04:25", map: "羽田空港" },
-      { icon: "🏰", name: "【迪士尼組】東京迪士尼", sub: "沈以恩・曾子榆 先衝迪士尼", map: "東京ディズニーランド" },
-      { icon: "👫", name: "【弟兄組】東京自由探索", sub: "彭柏愷・王麒竣・王新恩・高語謙", map: "東京 新宿" },
-      { icon: "👭", name: "【姊妹組】購物 & 觀光", sub: "呂柔蒨・梁凱婷・葉倢妤・戴采薰・江至美", map: "原宿 竹下通り" },
-      { icon: "🏠", name: "【甘家】親子遊", sub: "甘順基・王新恩・甘語行・甘語安", map: "東京 浅草" },
+      { icon: "🏰", name: "【迪士尼組・8人】出發！", sub: "7:20 左右抵達迪士尼陸地", time: "07:20", map: "東京ディズニーランド" },
+      { icon: "🗼", name: "【其他人】整天自由行", sub: "淺草・原宿・新宿・表參道 自由探索", map: "東京 浅草" },
     ],
     hotel: { name: "Minn 葛西", note: "", paid: false, map: "https://maps.app.goo.gl/GzCiXEZALT7Ho49v8" }
   },
   {
-    day: 3, date: "4/25", wd: "六", theme: "東京迪士尼樂園", emoji: "🏰",
+    day: 3, date: "4/25", wd: "六", theme: "東京迪士尼樂園（全員）", emoji: "🏰",
     acts: [
-      { icon: "🌅", name: "早出發！迪士尼開園", sub: "建議 09:00 前到達，提早排隊搶設施", time: "09:00", map: "東京ディズニーランド" },
-      { icon: "🎢", name: "各組分頭暢玩", sub: "依分組攻略遊玩設施", map: "東京ディズニーランド" },
+      { icon: "🚖", name: "分組搭計程車前往迪士尼", sub: "⚠️ 06:00 要搭上車！", time: "06:00" },
+      { icon: "🎢", name: "06:30 進入排隊隊伍", sub: "提早排隊搶熱門設施", time: "06:30", map: "東京ディズニーランド" },
       { icon: "🎆", name: "夜間遊行 & 煙火", sub: "晚間夜間娛樂節目", time: "20:00", map: "東京ディズニーランド" },
     ],
     hotel: { name: "Minn 葛西", note: "", paid: false, map: "https://maps.app.goo.gl/GzCiXEZALT7Ho49v8" },
@@ -1108,9 +1107,11 @@ const DAYS = [
   {
     day: 4, date: "4/26", wd: "日", theme: "主日聚會 & 返家", emoji: "⛪",
     acts: [
-      { icon: "⛪", name: "主日聚會", sub: "西早稲田集会所 AM10:00～12:00", time: "10:00", map: "https://maps.app.goo.gl/41gfPL8jVaMXbAKa9" },
-      { icon: "🛍️", name: "午後自由時間 & 採買", sub: "繼續玩組 / 機場報到準備", map: "東京 新宿" },
-      { icon: "✈️", name: "各組陸續返台", sub: "成田 20:00 / 20:40 / 20:45 / 22:50 出發", time: "20:00", map: "成田国際空港" },
+      { icon: "🧳", name: "退房 + 寄送行李", sub: "⚠️ 最晚 8:30-8:45 前完成退房 & 行李寄送", time: "08:30" },
+      { icon: "⛪", name: "主日聚會出發", sub: "通勤時長約 45-60 分，請提早出門", time: "09:00", map: "https://maps.app.goo.gl/41gfPL8jVaMXbAKa9" },
+      { icon: "🙏", name: "主日聚會・西早稲田集会所", sub: "AM10:00～12:00", time: "10:00", map: "https://maps.app.goo.gl/41gfPL8jVaMXbAKa9" },
+      { icon: "🛍️", name: "午後自由時間", sub: "繼續玩組 / 採買伴手禮" },
+      { icon: "✈️", name: "前往機場", sub: "視航班而定，約 16:00 開始前往成田", time: "16:00", map: "成田国際空港" },
     ],
     hotel: null,
     flight: { label: "回程（各組）", from: "NRT", fromCity: "成田", to: "TPE/TSA", toCity: "台灣", dept: "20:00~", arr: "深夜", num: "多班次" }
@@ -1136,18 +1137,19 @@ const MEMBERS = [
 ];
 
 const NOTES = [
+  { icon: "📋", text: "Visit Japan Web（VJW）出發前務必填寫完成，截圖 QR Code 備用" },
+  { icon: "🛂", text: "確認護照效期是否在 6 個月以上（效期不足需申請換發）" },
+  { icon: "📶", text: "網路通訊：依個人習慣購買 eSIM 或實體 SIM 卡" },
+  { icon: "💴", text: "換匯與支付：準備適量日幣現金，並確認信用卡可在日本使用" },
   { icon: "🔌", text: "日本插座電壓 100V，雙孔同台灣，無須轉接頭" },
-  { icon: "📱", text: "提前完成 Visit Japan Web 申請，截圖 QR Code 備用" },
-  { icon: "🎢", text: "迪士尼 APP（TDR APP）提前下載，可查待機時間" },
-  { icon: "💳", text: "迪士尼園內可使用信用卡，建議備妥日幣零錢" },
-  { icon: "📶", text: "出發前確認國際漫遊已開通，或準備 SIM 卡" },
-  { icon: "⛪", text: "主日聚會：西早稲田集会所，週日 AM10:00，新宿区西早稲田1-12-3" },
-  { icon: "🌂", text: "四月東京氣候多變，建議攜帶折疊傘" },
+  { icon: "⛪", text: "主日聚會：西早稲田集会所，週日 AM10:00，需 9:00 前出門（通勤 45-60 分）" },
+  { icon: "🚖", text: "Day3 迪士尼：06:00 搭計程車，06:30 開始排隊，務必準時！" },
+  { icon: "🧳", text: "Day4 退房：最晚 8:30-8:45 前退房 + 寄送行李，約 16:00 前往機場" },
 ];
 
 const CHECKLIST = [
-  "護照","機票電子票","Visit Japan Web QR Code",
-  "日幣現金","信用卡","IC卡（Suica/Pasmo）","國際漫遊開通",
+  "護照（效期6個月以上）","機票電子票","Visit Japan Web（VJW）QR Code",
+  "日幣現金","信用卡","eSIM / 實體SIM卡（網路）",
   "換洗衣物（4天）","盥洗用品","個人藥品","口罩",
   "充電器 + 行動電源","雨具","防曬乳","迪士尼 TDR APP",
 ];
