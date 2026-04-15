@@ -1096,15 +1096,7 @@
   <div class="tab-panel" id="tab-messages"></div>
   <div class="tab-panel" id="tab-expenses"></div>
 <div class="tab-panel" id="tab-guide">
-  <div class="guide-wrap">
-    <div class="guide-subtab-bar">
-      <button class="guide-subtab active" id="gsub-prep" onclick="switchGuideTab('prep')">行前準備</button>
-      <button class="guide-subtab" id="gsub-land" onclick="switchGuideTab('land')">4/24 樂園</button>
-      <button class="guide-subtab" id="gsub-sea"  onclick="switchGuideTab('sea')">4/25 海洋</button>
-      <button class="guide-subtab" id="gsub-tips" onclick="switchGuideTab('tips')">注意事項</button>
-    </div>
-    <div class="guide-body" id="guide-body"></div>
-  </div>
+<div style="display:flex;background:white;border-bottom:1px solid #f0d0da;padding:8px 10px 0;gap:6px;position:sticky;top:0;z-index:10;"><button onclick="gTab(this,'gs-prep')" id="gb-prep" style="flex:1;border:none;border-radius:8px 8px 0 0;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#c94b72;color:white;">行前準備</button><button onclick="gTab(this,'gs-land')" id="gb-land" style="flex:1;border:none;border-radius:8px 8px 0 0;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#fce8ef;color:#c94b72;">4/24 樂園</button><button onclick="gTab(this,'gs-sea')"  id="gb-sea"  style="flex:1;border:none;border-radius:8px 8px 0 0;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#fce8ef;color:#c94b72;">4/25 海洋</button><button onclick="gTab(this,'gs-tips')" id="gb-tips" style="flex:1;border:none;border-radius:8px 8px 0 0;padding:8px 4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;background:#fce8ef;color:#c94b72;">注意事項</button></div><div id="gs-prep" style="padding:14px 12px 80px;"><div style="font-size:15px;font-weight:700;color:#c94b72;margin:0 0 10px;">📋 行前必做事項</div><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;"><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:20px;">📱</span><span style="font-size:13px;font-weight:600;">下載 Tokyo Disney Resort App 並完成註冊</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:20px;">🎫</span><span style="font-size:13px;font-weight:600;">找到票券並截圖備存</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:20px;">💬</span><span style="font-size:13px;font-weight:600;">確認已加入旅遊群組</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:20px;">💧</span><span style="font-size:13px;font-weight:600;">自備水壺（園區內可補水）</span></div><div style="display:flex;align-items:center;gap:10px;padding:12px 14px;"><span style="font-size:20px;">👟</span><span style="font-size:13px;font-weight:600;">穿舒適好走的鞋，全天步行量大</span></div></div></div><div id="gs-land" style="display:none;padding:14px 12px 80px;"><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;margin-bottom:14px;"><div style="background:#c94b72;color:white;padding:10px 14px;font-size:14px;font-weight:700;">🏰 4/24（週五）迪士尼樂園 ・ 8人先锋組</div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">06:55</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">葛西站皑10月台出發</div><div style="font-size:11px;color:#999;margin-top:2px;">搞巴士前往迪士尼樂園</div></div><a href="https://maps.google.com/?q=葛西駅" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">07:20</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">抵達迪士尼樂園入口</div><div style="font-size:11px;color:#999;margin-top:2px;">主辦人在入口等候集合</div></div><a href="https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">09:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">開園—立刻購買 DPA</div><div style="font-size:11px;color:#999;margin-top:2px;">優先：美女與野獸 → 表演秀</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">09:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">上午遊玩（4 個設施）</div><div style="font-size:11px;color:#999;margin-top:2px;">飛濣山・大雷山・加勒比海盜・星際大戰</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">11:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">自由活動 &amp; 午餐</div><div style="font-size:11px;color:#999;margin-top:2px;">推薦 BIG POP 買爆米花桶！</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">13:15</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">城堡前集合</div><div style="font-size:11px;color:#999;margin-top:2px;">觀看 13:45 &amp; 15:00 場次表演</div></div><a href="https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">15:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">搞乘美女與野獸 DPA</div><div style="font-size:11px;color:#999;margin-top:2px;">約 1 小時</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">16:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">自由時間 &amp; 購物</div><div style="font-size:11px;color:#999;margin-top:2px;">紀念品・爆米花桶・角色拍照</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">18:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">鬼屋前集合</div><div style="font-size:11px;color:#999;margin-top:2px;">準備看夜間遊行</div></div><a href="https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">19:15</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">夜間遊行 🎆</div><div style="font-size:11px;color:#999;margin-top:2px;">提早卡好位置！</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">20:35</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">夜間表演 ✨</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">21:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">返程出發</div><div style="font-size:11px;color:#999;margin-top:2px;">搞巴士回 Minn 葛西</div></div></div></div><div style="font-size:15px;font-weight:700;color:#c94b72;margin:0 0 10px;">🎟 必買 DPA 優先順序</div><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">必買 1</span><span style="font-size:13px;font-weight:600;">🌹 美女與野獸</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,000</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">必買 2</span><span style="font-size:13px;font-weight:600;">⭐ Reach for the Stars 表演</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,500</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">必買 3</span><span style="font-size:13px;font-weight:600;">🎵 米奇魔法音樂世界</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,500</span></div><div style="font-size:13px;font-weight:700;color:#c94b72;padding:10px 14px;text-align:right;border-top:1px solid #f5e0e6;">💰 DPA 合計約 ¥7,000</div></div></div><div id="gs-sea" style="display:none;padding:14px 12px 80px;"><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;margin-bottom:14px;"><div style="background:#c94b72;color:white;padding:10px 14px;font-size:14px;font-weight:700;">🌊 4/25（週六）迪士尼海洋 ・ 全員 20 人</div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">06:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">搞計程車出發</div><div style="font-size:11px;color:#999;margin-top:2px;">25周年慶活動週，人潮多！務必提早</div></div><a href="https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">06:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">抵達—開始排隊入場</div><div style="font-size:11px;color:#999;margin-top:2px;">依各組行動</div></div><a href="https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">08:50</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">入園—立刻購買 DPA</div><div style="font-size:11px;color:#999;margin-top:2px;">優先搶：冰雪奇緬 → 飛越 → 地底/彼得潘</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">09:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">上午遊玩（4 個設施）</div><div style="font-size:11px;color:#999;margin-top:2px;">依分組計畫行動</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">11:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">冰雪奇緬 DPA 場次</div><div style="font-size:11px;color:#999;margin-top:2px;">之後自由活動 &amp; 午餐</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">13:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">探索港區域</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">15:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">神秘島</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">16:30</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">自由時間 &amp; 購物</div><div style="font-size:11px;color:#999;margin-top:2px;">紀念品・角色拍照・下午茶</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">19:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">表演前集合</div><div style="font-size:11px;color:#999;margin-top:2px;">夢之光 / 夢之海 表演秀</div></div><a href="https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">20:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">自由活動</div></div></div><div style="display:flex;align-items:flex-start;gap:10px;padding:10px 14px;"><span style="font-size:12px;font-weight:700;color:#c94b72;min-width:42px;flex-shrink:0;">21:00</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;">噴泉出口集合，返程</div><div style="font-size:11px;color:#999;margin-top:2px;">回 Minn 葛西</div></div><a href="https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7" target="_blank" style="display:flex;align-items:center;background:#fce8ef;color:#c94b72;border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;text-decoration:none;flex-shrink:0;">🗺️ 地圖</a></div></div><div style="font-size:15px;font-weight:700;color:#c94b72;margin:0 0 10px;">🎟 必買 DPA 優先順序</div><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">優先 1</span><span style="font-size:13px;font-weight:600;">❄️ 冰雪奇緬</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,000</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">優先 2</span><span style="font-size:13px;font-weight:600;">🚀 飛越・夢幻奇航</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥1,500</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">優先 3</span><span style="font-size:13px;font-weight:600;">🌋 地底旅行</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥1,500</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #f5e0e6;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">優先 4</span><span style="font-size:13px;font-weight:600;">🧚 彼得潘</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,000</span></div><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;"><div style="display:flex;align-items:center;"><span style="font-size:10px;color:#c94b72;font-weight:700;background:#fce8ef;border-radius:5px;padding:2px 6px;margin-right:8px;">必買</span><span style="font-size:13px;font-weight:600;">✨ 夢之光/夢之海 表演</span></div><span style="font-size:11px;font-weight:700;color:white;background:#c94b72;border-radius:6px;padding:3px 8px;">¥2,500</span></div><div style="font-size:13px;font-weight:700;color:#c94b72;padding:10px 14px;text-align:right;border-top:1px solid #f5e0e6;">💰 DPA 合計約 ¥10,500</div></div></div><div id="gs-tips" style="display:none;padding:14px 12px 80px;"><div style="font-size:15px;font-weight:700;color:#c94b72;margin:0 0 10px;">⚠️ 注意事項</div><div style="background:white;border-radius:14px;box-shadow:0 2px 10px rgba(201,75,114,0.08);overflow:hidden;"><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:18px;flex-shrink:0;">🛍️</span><span style="font-size:13px;color:#333;line-height:1.5;">看到喜歡的东西立刻買！不買就沒了</span></div><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:18px;flex-shrink:0;">⏰</span><span style="font-size:13px;color:#333;line-height:1.5;">DPA 優先順序要提前規劃好，開園衝第一個</span></div><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:18px;flex-shrink:0;">🚫</span><span style="font-size:13px;color:#333;line-height:1.5;">禁止攜帶：大背包、外食（幼童食物除外）、自拍棒、腳架</span></div><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:18px;flex-shrink:0;">👋</span><span style="font-size:13px;color:#333;line-height:1.5;">遇到迪士尼角色，大力揮手打招呼！</span></div><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid #f5e0e6;"><span style="font-size:18px;flex-shrink:0;">💧</span><span style="font-size:13px;color:#333;line-height:1.5;">多喝水，園區內可免費補充飲水</span></div><div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;"><span style="font-size:18px;flex-shrink:0;">🙏</span><span style="font-size:13px;color:#333;line-height:1.5;">願主祝福我們的相調，與我們同在！</span></div></div></div>
 </div>
 </main>
 
@@ -1142,7 +1134,7 @@
     </svg>
     <span>記帳</span>
   </button>
-    <button class="nav-btn" id="nav-guide" onclick="switchTab('guide')">
+      <button class="nav-btn" id="nav-guide" onclick="switchTab('guide')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
     <span>攻略</span>
   </button>
@@ -2956,131 +2948,17 @@ renderMessages();
 renderExpenses();
 initFirebase();
 adjustLayout();
-renderGuide();
 window.addEventListener("resize", adjustLayout);
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
-// Disney Guide
-var GUIDE_DATA = {
-  prep: [
-    { icon: '📱', text: '下載 Tokyo Disney Resort App 並完成註冊' },
-    { icon: '🎫', text: '找到票券並截圖備存' },
-    { icon: '💬', text: '確認已加入旅遊群組' },
-    { icon: '💧', text: '自備水壺（園區內可補水）' },
-    { icon: '👟', text: '穿舒適好走的鞋，全天步行量大' },
-  ],
-  land: {
-    title: '4/24（週五）迪士尼樂園',
-    emoji: '🏰',
-    people: '8 人先锋組',
-    schedule: [
-      { time: '06:55', name: '葦西站皑10月台出發', sub: '搞巴士前往迪士尼樂園', map: 'https://maps.google.com/?q=葛西駅' },
-      { time: '07:20', name: '抵達迪士尼樂園入口', sub: '主辦人在入口等候集合', map: 'https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8' },
-      { time: '09:00', name: '開園—立刻購買 DPA', sub: '優先：美女與野獸 → 表演秀' },
-      { time: '09:00', name: '上午遊玩（4 個設施）', sub: '飛濣山・大雷山・加勒比海盜・星際大戰' },
-      { time: '11:30', name: '自由活動 & 午餐', sub: '推薦 BIG POP 買爆米花桶！' },
-      { time: '13:15', name: '城堡前集合', sub: '觀看 13:45 & 15:00 場次表演', map: 'https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8' },
-      { time: '15:30', name: '搭乘美女與野獸 DPA', sub: '約 1 小時' },
-      { time: '16:30', name: '自由時間 & 購物', sub: '紀念品・爆米花桶・角色拍照' },
-      { time: '18:30', name: '鬼屋前集合', sub: '準備看夜間遊行', map: 'https://maps.app.goo.gl/pLNFMi1WsBU3rBpL8' },
-      { time: '19:15', name: '夜間遊行 🎆', sub: '提早卡好位置！' },
-      { time: '20:35', name: '夜間表演 ✨', sub: '' },
-      { time: '21:00', name: '返程出發', sub: '搞巴士回 Minn 葛西' },
-    ],
-    mustBuy: [
-      { priority: '必買 1', name: '🌹 美女與野獸', price: '¥2,000' },
-      { priority: '必買 2', name: '⭐ Reach for the Stars 表演', price: '¥2,500' },
-      { priority: '必買 3', name: '🎵 米奇魔法音樂世界', price: '¥2,500' },
-    ],
-    total: 'DPA 合計約 ¥7,000',
-  },
-  sea: {
-    title: '4/25（週六）迪士尼海洋',
-    emoji: '🌊',
-    people: '全員 20 人',
-    schedule: [
-      { time: '06:00', name: '搞計程車出發', sub: '25周年慶活動週，人潮多！務必提早', map: 'https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7' },
-      { time: '06:30', name: '抵達 — 開始排隊入場', sub: '依各組行動', map: 'https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7' },
-      { time: '08:50', name: '入園 — 立刻購買 DPA', sub: '優先搶：冰雪奇緬 → 飛越 → 地底/彼得潘' },
-      { time: '09:00', name: '上午遊玩（4 個設施）', sub: '依分組計畫行動' },
-      { time: '11:30', name: '冰雪奇緬 DPA 場次', sub: '之後自由活動 & 午餐' },
-      { time: '13:30', name: '探索港區域', sub: '' },
-      { time: '15:00', name: '神秘島', sub: '' },
-      { time: '16:30', name: '自由時間 & 購物', sub: '紀念品・角色拍照・下午茶' },
-      { time: '19:00', name: '表演前集合', sub: '夢之光 / 夢之海 表演秀', map: 'https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7' },
-      { time: '20:00', name: '自由活動', sub: '' },
-      { time: '21:00', name: '噴泉出口集合，返程', sub: '回 Minn 葛西', map: 'https://maps.app.goo.gl/7Y5FHhnR6k9gMHrD7' },
-    ],
-    mustBuy: [
-      { priority: '優先 1', name: '❄️ 冰雪奇緬', price: '¥2,000' },
-      { priority: '優先 2', name: '🚀 飛越・夢幻奇航', price: '¥1,500' },
-      { priority: '優先 3', name: '🌋 地底旅行', price: '¥1,500' },
-      { priority: '優先 4', name: '🧚 彼得潘', price: '¥2,000' },
-      { priority: '必買', name: '✨ 夢之光/夢之海 表演', price: '¥2,500' },
-    ],
-    total: 'DPA 合計約 ¥10,500',
-  },
-  tips: [
-    { icon: '🛍️', text: '看到喜歡的东西立刻買！不買就沒了' },
-    { icon: '⏰', text: 'DPA 優先順序要提前規劃好，開園衝第一個' },
-    { icon: '🚫', text: '禁止攜帶：大背包、外食（幼童食物除外）、自拍棒、腳架' },
-    { icon: '👋', text: '遇到迪士尼角色，大力揮手打招呼！' },
-    { icon: '💧', text: '多喝水，園區內可免費補充飲水' },
-    { icon: '🙏', text: '願主祝福我們的相調，與我們同在！' },
-  ],
-};
 
-var currentGuideTab = 'prep';
 
-function switchGuideTab(tab) {
-  currentGuideTab = tab;
-  document.querySelectorAll('.guide-subtab').forEach(function(b){ b.classList.remove('active'); });
-  var btn = document.getElementById('gsub-' + tab);
-  if (btn) btn.classList.add('active');
-  renderGuide();
-}
 
-function renderGuide() {
-  var body = document.getElementById('guide-body');
-  if (!body) return;
-  var tab = currentGuideTab;
-  var out = '';
-  if (tab === 'prep') {
-    out = '<div class="guide-section-title">📋 行前必做事項</div><div class="guide-card">';
-    GUIDE_DATA.prep.forEach(function(p){
-      out += '<div class="guide-prep-row"><span style="font-size:18px">' + p.icon + '</span><span style="font-size:13px;font-weight:600;color:var(--text-1)">' + p.text + '</span></div>';
-    });
-    out += '</div>';
-    body.innerHTML = out; return;
-  }
-  if (tab === 'tips') {
-    out = '<div class="guide-section-title">⚠️ 注意事項</div><div class="guide-card">';
-    GUIDE_DATA.tips.forEach(function(t){
-      out += '<div class="guide-tip-row"><span style="font-size:16px;flex-shrink:0">' + t.icon + '</span><span class="guide-tip-text">' + t.text + '</span></div>';
-    });
-    out += '</div>';
-    body.innerHTML = out; return;
-  }
-  var d = (tab === 'land') ? GUIDE_DATA.land : GUIDE_DATA.sea;
-  out = '<div class="guide-card" style="margin-bottom:14px">';
-  out += '<div class="guide-card-header">' + d.emoji + ' ' + d.title + ' <span style="font-size:11px;opacity:.85;margin-left:4px">' + d.people + '</span></div>';
-  d.schedule.forEach(function(s){
-    out += '<div class="guide-row"><span class="guide-time">' + (s.time||'') + '</span><div class="guide-info"><div class="guide-name">' + s.name + '</div>';
-    if (s.sub) out += '<div class="guide-sub">' + s.sub + '</div>';
-    out += '</div>';
-    if (s.map) out += '<a class="guide-map-btn" href="' + s.map + '" target="_blank" rel="noopener">🗺️ 地圖</a>';
-    out += '</div>';
-  });
-  out += '</div>';
-  out += '<div class="guide-section-title">🎟 必買 DPA 優先順序</div><div class="guide-card">';
-  d.mustBuy.forEach(function(m){
-    out += '<div class="guide-dpa-row"><div style="display:flex;align-items:center"><span class="guide-priority">' + m.priority + '</span><span class="guide-dpa-name">' + m.name + '</span></div><span class="guide-dpa-badge">' + m.price + '</span></div>';
-  });
-  out += '<div class="guide-total">💰 ' + d.total + '</div></div>';
-  body.innerHTML = out;
-}
+
+
+function gTab(btn,sid){['gs-prep','gs-land','gs-sea','gs-tips'].forEach(function(id){document.getElementById(id).style.display='none';});['gb-prep','gb-land','gb-sea','gb-tips'].forEach(function(id){var b=document.getElementById(id);b.style.background='#fce8ef';b.style.color='#c94b72';});document.getElementById(sid).style.display='block';btn.style.background='#c94b72';btn.style.color='white';}
 </script>
 </body>
 </html>
