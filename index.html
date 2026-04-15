@@ -2953,11 +2953,11 @@ if ("serviceWorker" in navigator) {
 function gTab(btn,sid){['gs-prep','gs-land','gs-sea','gs-tips'].forEach(function(id){document.getElementById(id).style.display='none';});['gb-prep','gb-land','gb-sea','gb-tips'].forEach(function(id){var b=document.getElementById(id);b.style.background='#fce8ef';b.style.color='#c94b72';});document.getElementById(sid).style.display='block';btn.style.background='#c94b72';btn.style.color='white';}
 
 // Currency Converter
-var fxRate = 0.22; // fallback: 1 JPY = 0.22 TWD
+var fxRate = 0.20; // fallback: 1 JPY = 0.22 TWD
 
 async function loadFXRate() {
   try {
-    var res = await fetch("https://api.frankfurter.app/latest?from=JPY&to=TWD");
+    var res = await fetch("https://open.er-api.com/v6/latest/JPY");
     var data = await res.json();
     fxRate = data.rates.TWD;
     var el = document.getElementById("fx-rate");
