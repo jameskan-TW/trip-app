@@ -1045,6 +1045,53 @@
     .guide-tip-row:last-child{border-bottom:none;}
     .guide-tip-text{font-size:13px;color:var(--text-1);line-height:1.4;}
 
+    
+    /* Currency Converter */
+    .fx-btn {
+      position: fixed; right: 16px; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 14px);
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--pink); color: white; border: none;
+      font-size: 11px; font-weight: 700; font-family: inherit;
+      cursor: pointer; z-index: 200;
+      box-shadow: 0 4px 16px rgba(201,75,114,0.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+      line-height: 1.2;
+    }
+    .fx-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 300;
+      align-items: flex-end; justify-content: center;
+    }
+    .fx-overlay.open { display: flex; }
+    .fx-sheet {
+      background: white; border-radius: 24px 24px 0 0;
+      padding: 20px 20px 40px; width: 100%; max-width: 480px;
+    }
+    .fx-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .fx-title { font-size: 17px; font-weight: 700; color: var(--pink); }
+    .fx-rate  { font-size: 12px; color: var(--text-3); }
+    .fx-close { background: var(--pink-pale); border: none; border-radius: 50%;
+      width: 32px; height: 32px; font-size: 18px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; }
+    .fx-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .fx-flag { font-size: 22px; flex-shrink: 0; }
+    .fx-label { font-size: 12px; font-weight: 700; color: var(--text-3); min-width: 28px; }
+    .fx-input {
+      flex: 1; font-size: 22px; font-weight: 700; color: var(--text-1);
+      border: none; border-bottom: 2px solid var(--pink-pale);
+      padding: 6px 0; outline: none; font-family: inherit;
+      background: transparent;
+    }
+    .fx-input:focus { border-bottom-color: var(--pink); }
+    .fx-unit { font-size: 13px; font-weight: 600; color: var(--text-3); }
+    .fx-divider { text-align: center; font-size: 20px; margin: 4px 0 12px; }
+    .fx-tips { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 8px; }
+
     </style>
 </head>
 <body>
@@ -1718,98 +1765,43 @@ function dateToISO(d) {
 async function loadWeatherStrip() {
   const el = document.getElementById("weather-strip");
   if (!el) return;
-
-  const today = getTodayDate();
-  // 算出「明天」= DAYS 中 today 下一天的 date
-  const todayIdx = DAYS.findIndex(d => d.date === today);
-  const tomorrowDate = todayIdx >= 0 && todayIdx + 1 < DAYS.length
-    ? DAYS[todayIdx + 1].date : null;
-
-  // 從 WEATHER_LOCS 動態取得所有唯一地點（保持順序）
-  const seen = new Set();
-  const uniqueLocs = Object.values(WEATHER_LOCS).flat()
-    .filter(l => seen.has(l.key) ? false : (seen.add(l.key), true));
-
   try {
-    const forecasts = {};
-    await Promise.all(uniqueLocs.map(async loc => {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
-        `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code` +
-        `&start_date=2026-04-23&end_date=2026-04-26&timezone=Asia%2FTokyo`;
-      const res = await fetch(url);
-      const data = await res.json();
-      data.daily.time.forEach((isoDate, i) => {
-        const mmdd = isoDate.slice(5).replace("-", "/").replace(/^0/, "");
-        if (!forecasts[mmdd]) forecasts[mmdd] = {};
-        forecasts[mmdd][loc.key] = {
-          max:  Math.round(data.daily.temperature_2m_max[i]),
-          min:  Math.round(data.daily.temperature_2m_min[i]),
-          rain: data.daily.precipitation_probability_max[i] ?? 0,
-          code: data.daily.weather_code[i],
-        };
-      });
-    }));
+    const TOKYO_URL   = "https://api.open-meteo.com/v1/forecast?latitude=35.69&longitude=139.69&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&start_date=2026-04-23&end_date=2026-04-26&timezone=Asia%2FTokyo";
+    const MAIHAMA_URL = "https://api.open-meteo.com/v1/forecast?latitude=35.63&longitude=139.88&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&start_date=2026-04-23&end_date=2026-04-26&timezone=Asia%2FTokyo";
+    const [tr, mr] = await Promise.all([fetch(TOKYO_URL), fetch(MAIHAMA_URL)]);
+    const tokyo   = (await tr.json()).daily;
+    const maihama = (await mr.json()).daily;
 
-    const cards = DAYS.map(d => {
-      const locs = WEATHER_LOCS[d.date];
-      if (!locs) return "";
-      const isToday    = d.date === today;
-      const isTomorrow = d.date === tomorrowDate;
-      const isPastDay  = !isToday && !isTomorrow && (() => {
-        const [m, day] = d.date.split("/").map(Number);
-        return new Date(2026, m - 1, day) < new Date(new Date().setHours(0, 0, 0, 0));
-      })();
-      const cls = ["weather-day-card",
-        isToday    ? "is-today"    : "",
-        isTomorrow ? "is-tomorrow" : "",
-        isPastDay  ? "is-past"     : "",
-      ].filter(Boolean).join(" ");
+    const WEATHER_DAYS = [
+      { day:1, label:"4/23", loc:"東京",      d:tokyo,   i:0 },
+      { day:2, label:"4/24", loc:"東京",      d:tokyo,   i:1 },
+      { day:3, label:"4/25", loc:"舞濱/迪士尼", d:maihama, i:2 },
+      { day:4, label:"4/26", loc:"東京",      d:tokyo,   i:3 },
+    ];
 
-      const rows = locs.map(loc => {
-        let f = forecasts[d.date]?.[loc.key];
-        let displayLabel = loc.label;
-        if (!f && loc.fallbackKey) {
-          f = forecasts[d.date]?.[loc.fallbackKey];
-          displayLabel = loc.fallbackLabel || loc.label;
-        }
-        if (!f) return "";
-        const rainIcon = f.rain >= 50 ? "🌂 " : "";
-        return `<div class="wdc-row">
-          <span class="wdc-loc">${displayLabel}</span>
-          <span class="wdc-icon-sm">${wmoIcon(f.code)}</span>
-          <span class="wdc-temp">${f.min}°/${f.max}°</span>
-          <span class="wdc-rain">${rainIcon}${f.rain}%</span>
-        </div>`;
-      }).join("");
-
-      if (!rows.trim()) return "";
-      return `<div class="${cls}">
-        <div class="wdc-label">Day${d.day} ${d.date.split("/")[1]}日</div>
-        ${rows}
-      </div>`;
+    const today = getTodayDate();
+    const cards = WEATHER_DAYS.map(function(d) {
+      var max  = Math.round(d.d.temperature_2m_max[d.i]);
+      var min  = Math.round(d.d.temperature_2m_min[d.i]);
+      var rain = d.d.precipitation_probability_max[d.i] || 0;
+      var code = d.d.weather_code[d.i];
+      var icon = wmoIcon(code);
+      var rainTxt = rain >= 50 ? "🌂 " + rain + "%" : rain + "%";
+      var cls  = "weather-day-card" + (d.label === today ? " is-today" : "");
+      return '<div class="' + cls + '">'
+        + '<div class="wdc-label">Day' + d.day + ' ' + d.label.split("/")[1] + '日</div>'
+        + '<div class="wdc-row">'
+        + '<span class="wdc-loc">' + d.loc + '</span>'
+        + '<span class="wdc-icon-sm">' + icon + '</span>'
+        + '<span class="wdc-temp">' + min + '°/' + max + '°</span>'
+        + '<span class="wdc-rain">' + rainTxt + '</span>'
+        + '</div></div>';
     }).join("");
 
-    el.innerHTML = cards || `<span class="weather-loading">無法取得資料</span>`;
-
-    // ── 分頁圓點 ──
-    const dotsEl = document.getElementById("weather-dots");
-    const cardCount = el.querySelectorAll(".weather-day-card").length;
-    if (dotsEl && cardCount > 1) {
-      dotsEl.innerHTML = Array.from({length: cardCount}, (_, i) =>
-        `<div class="weather-dot" id="wdot-${i}"></div>`).join("");
-      const updateDots = () => {
-        const idx = Math.round(el.scrollLeft / (el.scrollWidth / cardCount));
-        dotsEl.querySelectorAll(".weather-dot").forEach((d, i) =>
-          d.classList.toggle("active", i === idx));
-      };
-      updateDots();
-      el.addEventListener("scroll", updateDots, { passive: true });
-    }
-
-    const todayCard = el.querySelector(".is-today");
-    if (todayCard) todayCard.scrollIntoView({ behavior: "auto", block: "nearest", inline: "start" });
+    el.innerHTML = cards || '<span class="weather-loading">無法取得資料</span>';
   } catch(e) {
-    el.innerHTML = `<span class="weather-loading">天氣載入失敗</span>`;
+    console.error("weather error", e);
+    el.innerHTML = '<span class="weather-loading">天氣載入失敗</span>';
   }
 }
 
@@ -2959,6 +2951,70 @@ if ("serviceWorker" in navigator) {
 
 
 function gTab(btn,sid){['gs-prep','gs-land','gs-sea','gs-tips'].forEach(function(id){document.getElementById(id).style.display='none';});['gb-prep','gb-land','gb-sea','gb-tips'].forEach(function(id){var b=document.getElementById(id);b.style.background='#fce8ef';b.style.color='#c94b72';});document.getElementById(sid).style.display='block';btn.style.background='#c94b72';btn.style.color='white';}
+
+// Currency Converter
+var fxRate = 0.22; // fallback: 1 JPY = 0.22 TWD
+
+async function loadFXRate() {
+  try {
+    var res = await fetch("https://api.frankfurter.app/latest?from=JPY&to=TWD");
+    var data = await res.json();
+    fxRate = data.rates.TWD;
+    var el = document.getElementById("fx-rate");
+    if (el) el.textContent = "1 JPY = " + fxRate.toFixed(4) + " TWD  (即時匠率)";
+    var tips = document.getElementById("fx-tips");
+    if (tips) tips.textContent = "資料來自 Frankfurter · " + new Date().toLocaleTimeString("zh-TW");
+  } catch(e) {
+    var el = document.getElementById("fx-rate");
+    if (el) el.textContent = "1 JPY ≈ 0.22 TWD  (预設匠率)";
+  }
+}
+
+function openFX() {
+  document.getElementById("fx-overlay").classList.add("open");
+  loadFXRate();
+}
+function closeFX() {
+  document.getElementById("fx-overlay").classList.remove("open");
+}
+function calcTWD() {
+  var jpy = parseFloat(document.getElementById("fx-jpy").value) || 0;
+  var twd = (jpy * fxRate).toFixed(0);
+  document.getElementById("fx-twd").value = jpy ? twd : "";
+}
+function calcJPY() {
+  var twd = parseFloat(document.getElementById("fx-twd").value) || 0;
+  var jpy = (twd / fxRate).toFixed(0);
+  document.getElementById("fx-jpy").value = twd ? jpy : "";
+}
+
 </script>
+
+<button class="fx-btn" onclick="openFX()" title="匠率換算"><span style="font-size:14px;">¥⇔NT$</span></button>
+<div class="fx-overlay" id="fx-overlay" onclick="if(event.target===this)closeFX()">
+  <div class="fx-sheet">
+    <div class="fx-header">
+      <div>
+        <div class="fx-title">💱 匠率換算</div>
+        <div class="fx-rate" id="fx-rate">載入即時匠率中…</div>
+      </div>
+      <button class="fx-close" onclick="closeFX()">×</button>
+    </div>
+    <div class="fx-row">
+      <span class="fx-flag">🇯🇵</span>
+      <span class="fx-label">JPY</span>
+      <input class="fx-input" id="fx-jpy" type="number" placeholder="0" oninput="calcTWD()">
+      <span class="fx-unit">圓</span>
+    </div>
+    <div class="fx-divider">↕</div>
+    <div class="fx-row">
+      <span class="fx-flag">🇹🇼</span>
+      <span class="fx-label">TWD</span>
+      <input class="fx-input" id="fx-twd" type="number" placeholder="0" oninput="calcJPY()">
+      <span class="fx-unit">元</span>
+    </div>
+    <div class="fx-tips" id="fx-tips"></div>
+  </div>
+</div>
 </body>
 </html>
