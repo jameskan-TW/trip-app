@@ -1092,6 +1092,33 @@
     .fx-divider { text-align: center; font-size: 20px; margin: 4px 0 12px; }
     .fx-tips { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 8px; }
 
+    
+    /* Personal Checklist */
+    .person-bar {
+      display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 4px;
+      scrollbar-width: none;
+    }
+    .person-bar::-webkit-scrollbar { display: none; }
+    .person-chip {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      flex-shrink: 0; cursor: pointer; padding: 6px 10px;
+      border-radius: 14px; border: 2px solid transparent;
+      background: var(--pink-pale); transition: all .15s;
+      min-width: 56px;
+    }
+    .person-chip.active {
+      border-color: var(--pink); background: white;
+      box-shadow: 0 2px 10px rgba(201,75,114,0.2);
+    }
+    .person-chip-avatar { font-size: 22px; line-height: 1; }
+    .person-chip-name   { font-size: 10px; font-weight: 700; color: var(--text-2); white-space: nowrap; }
+    .person-chip.active .person-chip-name { color: var(--pink); }
+    .person-greeting {
+      padding: 6px 16px 0;
+      font-size: 13px; color: var(--text-3);
+    }
+    .person-greeting strong { color: var(--pink); }
+
     </style>
 </head>
 <body>
@@ -1307,7 +1334,30 @@ const CHECKLIST = [
   "換洗衣物（4天）","盥洗用品","個人藥品","口罩",
   "充電器 + 行動電源","雨具","防曬乳","迪士尼 TDR APP",
 ];
-const CHECK_KEY = "tokyo2026disney-check-v1";
+const CHECK_KEY        = "tokyo2026disney-check-v1";
+const CUSTOM_KEY_BASE  = "tokyo2026disney-custom-check-v1";
+const CHECK_KEY_BASE   = CHECK_KEY;
+
+function getCheckName() {
+  return localStorage.getItem("messageName") || "";
+}
+function getCheckKey() {
+  var n = getCheckName();
+  return n ? CHECK_KEY_BASE + "-" + n : CHECK_KEY_BASE;
+}
+function getCustomCheckKey() {
+  var n = getCheckName();
+  return n ? CUSTOM_KEY_BASE + "-" + n : CUSTOM_KEY_BASE;
+}
+function loadPersonChecked() {
+  checked      = new Set(JSON.parse(localStorage.getItem(getCheckKey())      || "[]"));
+  customChecks = JSON.parse(localStorage.getItem(getCustomCheckKey()) || "[]");
+}
+function switchPerson(name) {
+  localStorage.setItem("messageName", name);
+  loadPersonChecked();
+  renderChecklist();
+}
 
 const RESTAURANTS = {
   1: [
@@ -1703,7 +1753,7 @@ function toggleDay(n) {
 
 function toggleCheck(i) {
   checked.has(i) ? checked.delete(i) : checked.add(i);
-  localStorage.setItem(CHECK_KEY, JSON.stringify([...checked]));
+  localStorage.setItem(getCheckKey(), JSON.stringify([...checked]));
   renderPacking();
 }
 
@@ -1970,6 +2020,7 @@ function renderItinerary() {
 // ─── Render: Checklist (打包 + 購物 sub-tabs) ─────────────────────
 
 function renderChecklist() {
+  loadPersonChecked();
   const p = checklistSubTab === "packing";
   const checkHelp = helpCard('checklist', '📋 清單 — 怎麼用', [
     '【🎒 打包】出發前逐項打勾確認，避免忘帶東西',
@@ -1977,7 +2028,19 @@ function renderChecklist() {
     '右下角 ＋ 可以自行新增項目',
     '打勾紀錄存在你自己的手機，不影響他人'
   ]);
-  document.getElementById("tab-checklist").innerHTML = checkHelp + `
+  var checkName   = getCheckName();
+  var personBar  = '<div class="person-bar">';
+  MEMBERS.forEach(function(m) {
+    var isActive = m.name === checkName ? " active" : "";
+    personBar += '<div class="person-chip' + isActive + '" onclick="switchPerson(\'' + m.name + '\')">'
+      + '<span class="person-chip-avatar">' + m.avatar + '</span>'
+      + '<span class="person-chip-name">' + m.name + '</span></div>';
+  });
+  personBar += '</div>';
+  var greeting = checkName
+    ? '<div class="person-greeting">✅ <strong>' + checkName + '</strong> 的打包清單，共 ' + checked.size + '/' + (CHECKLIST.length) + ' 完成</div>'
+    : '<div class="person-greeting" style="color:#c94b72;font-weight:600;">↑ 選擇一下這是誰的手機</div>';
+  document.getElementById("tab-checklist").innerHTML = checkHelp + personBar + greeting + `
     <div class="checklist-tabs">
       <button class="checklist-tab-btn \${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
       <button class="checklist-tab-btn \${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
@@ -2063,19 +2126,19 @@ function renderPacking() {
 function addCustomCheck(text) {
   if (!text.trim()) return;
   customChecks.push({ id: Date.now(), text: text.trim(), done: false });
-  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  localStorage.setItem(getCustomCheckKey(), JSON.stringify(customChecks));
   showCheckInput = false;
   renderPacking();
 }
 function toggleCustomCheck(id) {
   const item = customChecks.find(i => i.id === id);
   if (item) item.done = !item.done;
-  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  localStorage.setItem(getCustomCheckKey(), JSON.stringify(customChecks));
   renderPacking();
 }
 function deleteCustomCheck(id) {
   customChecks = customChecks.filter(i => i.id !== id);
-  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  localStorage.setItem(getCustomCheckKey(), JSON.stringify(customChecks));
   renderPacking();
 }
 function startEditCheck(id) {
@@ -2088,7 +2151,7 @@ function saveEditCheck(id) {
   if (!val) return;
   const item = customChecks.find(i => i.id === id);
   if (item) item.text = val;
-  localStorage.setItem(CUSTOM_CHECK_KEY, JSON.stringify(customChecks));
+  localStorage.setItem(getCustomCheckKey(), JSON.stringify(customChecks));
   editingCheckId = null;
   renderPacking();
 }
