@@ -1160,6 +1160,18 @@
       transition: background 0.15s, border-color 0.15s;
     }
     .mission-item.done .mission-check { background: var(--green); border-color: var(--green); }
+    .mission-content { flex: 1; min-width: 0; }
+    .mission-note-area { display: none; margin-top: 8px; }
+    .mission-item.note-open .mission-note-area { display: block; }
+    .mission-note-preview { display: none; font-size: 12px; color: var(--text-3); margin-top: 5px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+    .mission-item:not(.note-open) .mission-note-preview { display: block; }
+    .mission-textarea {
+      width: 100%; border: 1.5px solid #f0b8c8; border-radius: 10px;
+      padding: 8px 10px; font-size: 13px; font-family: inherit;
+      resize: none; min-height: 80px; background: #fff8fa;
+      outline: none; color: var(--text-1); line-height: 1.6; box-sizing: border-box;
+    }
+    .mission-textarea:focus { border-color: var(--pink); }
     .mission-num {
       width: 28px; height: 28px; border-radius: 50%;
       background: var(--pink); color: white;
@@ -1250,30 +1262,50 @@
     </div>
     <div class="mission-section-title">📋 五項小任務</div>
     <div class="mission-card">
-      <div class="mission-item" data-mid="1" onclick="toggleMission(1)">
+      <div class="mission-item" data-mid="1" onclick="openMissionNote(1)">
         <div class="mission-num">1</div>
-        <div class="mission-text">🍜 分享這次相調最喜歡的食物</div>
-        <div class="mission-check">✓</div>
+        <div class="mission-content">
+          <div class="mission-text">🍜 分享這次相調最喜歡的食物</div>
+          <div class="mission-note-area"><textarea class="mission-textarea" id="mission-ta-1" placeholder="在這裡寫下你的答案…" onclick="event.stopPropagation()" onblur="saveMissionNote(1)" rows="3"></textarea></div>
+          <div class="mission-note-preview" id="mission-preview-1"></div>
+        </div>
+        <div class="mission-check" onclick="event.stopPropagation(); toggleMission(1)">✓</div>
       </div>
-      <div class="mission-item" data-mid="2" onclick="toggleMission(2)">
+      <div class="mission-item" data-mid="2" onclick="openMissionNote(2)">
         <div class="mission-num">2</div>
-        <div class="mission-text">✨ 分享這次相調裡最難以忘憷的回憶<br><span style="font-size:11px;color:#aaa;">（並且在回程的飛機上，跟同伴分享！）</span></div>
-        <div class="mission-check">✓</div>
+        <div class="mission-content">
+          <div class="mission-text">✨ 分享這次相調裡最難以忘憷的回憶<br><span style="font-size:11px;color:#aaa;">（並且在回程的飛機上，跟同伴分享！）</span></div>
+          <div class="mission-note-area"><textarea class="mission-textarea" id="mission-ta-2" placeholder="在這裡寫下你的答案…" onclick="event.stopPropagation()" onblur="saveMissionNote(2)" rows="3"></textarea></div>
+          <div class="mission-note-preview" id="mission-preview-2"></div>
+        </div>
+        <div class="mission-check" onclick="event.stopPropagation(); toggleMission(2)">✓</div>
       </div>
-      <div class="mission-item" data-mid="3" onclick="toggleMission(3)">
+      <div class="mission-item" data-mid="3" onclick="openMissionNote(3)">
         <div class="mission-num">3</div>
-        <div class="mission-text">😄 分享這次相調中，讓你最印象深刻的同伴<br><span style="font-size:11px;color:#aaa;">（搞笑的/生氣的/迷路的都可以分享！）</span></div>
-        <div class="mission-check">✓</div>
+        <div class="mission-content">
+          <div class="mission-text">😄 分享這次相調中，讓你最印象深刻的同伴<br><span style="font-size:11px;color:#aaa;">（搞笑的/生氣的/迷路的都可以分享！）</span></div>
+          <div class="mission-note-area"><textarea class="mission-textarea" id="mission-ta-3" placeholder="在這裡寫下你的答案…" onclick="event.stopPropagation()" onblur="saveMissionNote(3)" rows="3"></textarea></div>
+          <div class="mission-note-preview" id="mission-preview-3"></div>
+        </div>
+        <div class="mission-check" onclick="event.stopPropagation(); toggleMission(3)">✓</div>
       </div>
-      <div class="mission-item" data-mid="4" onclick="toggleMission(4)">
+      <div class="mission-item" data-mid="4" onclick="openMissionNote(4)">
         <div class="mission-num">4</div>
-        <div class="mission-text">💞 分享這次相調中，讓你最珍賞的同伴</div>
-        <div class="mission-check">✓</div>
+        <div class="mission-content">
+          <div class="mission-text">💞 分享這次相調中，讓你最珍賞的同伴</div>
+          <div class="mission-note-area"><textarea class="mission-textarea" id="mission-ta-4" placeholder="在這裡寫下你的答案…" onclick="event.stopPropagation()" onblur="saveMissionNote(4)" rows="3"></textarea></div>
+          <div class="mission-note-preview" id="mission-preview-4"></div>
+        </div>
+        <div class="mission-check" onclick="event.stopPropagation(); toggleMission(4)">✓</div>
       </div>
-      <div class="mission-item" data-mid="5" onclick="toggleMission(5)">
+      <div class="mission-item" data-mid="5" onclick="openMissionNote(5)">
         <div class="mission-num">5</div>
-        <div class="mission-text">📸 依照上面內容，一人傳五張相片給相調組</div>
-        <div class="mission-check">✓</div>
+        <div class="mission-content">
+          <div class="mission-text">📸 依照上面內容，一人傳五張相片給相調組</div>
+          <div class="mission-note-area"><textarea class="mission-textarea" id="mission-ta-5" placeholder="在這裡寫下你的答案…" onclick="event.stopPropagation()" onblur="saveMissionNote(5)" rows="3"></textarea></div>
+          <div class="mission-note-preview" id="mission-preview-5"></div>
+        </div>
+        <div class="mission-check" onclick="event.stopPropagation(); toggleMission(5)">✓</div>
       </div>
     </div>
     <div class="mission-photo-tip">
@@ -3383,9 +3415,11 @@ function calcJPY() {
   document.getElementById("fx-jpy").value = twd ? jpy : "";
 }
 
-// ─── Mission Checkboxes ───────────────────────────────────────────
-const MISSION_KEY = "tokyo2026disney-mission-v1";
-let missionDone = new Set(JSON.parse(localStorage.getItem(MISSION_KEY) || "[]"));
+// ─── Mission Checkboxes + Notes ──────────────────────────────────
+const MISSION_KEY       = "tokyo2026disney-mission-v1";
+const MISSION_NOTES_KEY = "tokyo2026disney-mission-notes-v1";
+let missionDone  = new Set(JSON.parse(localStorage.getItem(MISSION_KEY)       || "[]"));
+let missionNotes = JSON.parse(localStorage.getItem(MISSION_NOTES_KEY) || "{}");
 
 function toggleMission(id) {
   missionDone.has(id) ? missionDone.delete(id) : missionDone.add(id);
@@ -3393,9 +3427,47 @@ function toggleMission(id) {
   renderMissionChecks();
 }
 
+function openMissionNote(id) {
+  const el = document.querySelector(`.mission-item[data-mid="${id}"]`);
+  if (!el) return;
+  const isOpen = el.classList.contains("note-open");
+  // 先關掉其他已開啟的
+  document.querySelectorAll(".mission-item.note-open").forEach(other => {
+    saveMissionNote(Number(other.dataset.mid));
+    other.classList.remove("note-open");
+  });
+  if (!isOpen) {
+    el.classList.add("note-open");
+    setTimeout(() => document.getElementById("mission-ta-" + id)?.focus(), 50);
+  }
+}
+
+function saveMissionNote(id) {
+  const ta = document.getElementById("mission-ta-" + id);
+  if (!ta) return;
+  const val = ta.value;
+  if (val.trim()) missionNotes[id] = val;
+  else delete missionNotes[id];
+  localStorage.setItem(MISSION_NOTES_KEY, JSON.stringify(missionNotes));
+  updateMissionPreview(id);
+}
+
+function updateMissionPreview(id) {
+  const preview = document.getElementById("mission-preview-" + id);
+  if (!preview) return;
+  const note = missionNotes[id] || "";
+  preview.textContent = note ? "💬 " + note : "";
+}
+
 function renderMissionChecks() {
   document.querySelectorAll(".mission-item[data-mid]").forEach(el => {
     el.classList.toggle("done", missionDone.has(Number(el.dataset.mid)));
+  });
+  // 還原已儲存的筆記內容
+  Object.entries(missionNotes).forEach(([id, text]) => {
+    const ta = document.getElementById("mission-ta-" + id);
+    if (ta) ta.value = text;
+    updateMissionPreview(Number(id));
   });
 }
 
