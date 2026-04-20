@@ -1199,6 +1199,20 @@
     }
     .mission-photo-tip-icon { font-size: 24px; flex-shrink: 0; }
     .mission-photo-tip-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+    .mission-share-btn {
+      display: block; width: 100%; margin-top: 12px;
+      padding: 14px; border-radius: 14px; border: none;
+      background: var(--pink); color: white;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.5px; transition: opacity 0.15s;
+    }
+    .mission-share-btn:active { opacity: 0.8; }
+    .mission-no-name { font-size:13px;color:var(--pink);font-weight:600;margin-bottom:10px; }
+    .admin-q-item { padding:8px 14px;border-bottom:1px solid #f5e0e6;display:flex;gap:10px;align-items:flex-start; }
+    .admin-q-item:last-child { border-bottom:none; }
+    .admin-q-num { font-size:11px;font-weight:800;color:var(--pink);min-width:16px;margin-top:2px; }
+    .admin-q-text { font-size:13px;color:var(--text-2);line-height:1.5;flex:1;white-space:pre-wrap;word-break:break-all; }
+    .admin-empty { color:var(--text-3);font-style:italic; }
 
     </style>
 </head>
@@ -1260,7 +1274,8 @@
       <div class="mission-hero-title">東京相調小任務</div>
       <div class="mission-hero-desc">嘿嘿大家ｾ 👋<br><br>相信大家一定很期待這個月的東京相調，為了這次相調能夠留下美好的回憶，以下小任務需要大家在相調的時候先預備嗚！</div>
     </div>
-    <div class="mission-section-title">📋 五項小任務</div>
+    <div class="mission-section-title" onclick="onMissionTitleTap()" style="cursor:pointer;user-select:none">📋 五項小任務</div>
+    <div id="mission-name-bar"></div>
     <div class="mission-card">
       <div class="mission-item" data-mid="1" onclick="openMissionNote(1)">
         <div class="mission-num">1</div>
@@ -1312,6 +1327,7 @@
       <span class="mission-photo-tip-icon">📲</span>
       <span class="mission-photo-tip-text">相片請傳至相調組群組，每人 <strong>5 張</strong>，格式不限——食物照、風景照、小劇一各種都歡迎！</span>
     </div>
+    <div id="mission-admin-view" style="display:none"></div>
     <div class="mission-footer">
       <div class="mission-footer-emoji">🎨</div>
       <div class="mission-footer-text">我們的成果展覽將於</div>
@@ -1509,6 +1525,7 @@ function switchPerson(name) {
   localStorage.setItem("messageName", name);
   loadPersonChecked();
   renderChecklist();
+  loadMissionNotesForCurrentPerson();
 }
 
 const RESTAURANTS = {
@@ -1549,8 +1566,9 @@ const FIREBASE_CONFIG = {
 const DB_PATH  = "tokyo2026disney/meeting";
 const MSG_PATH = "tokyo2026disney/messages";
 const EXP_PATH  = "tokyo2026disney/expenses";
-const SHOP_PATH = "tokyo2026disney/shopping";
-const SVR_PATH  = "tokyo2026disney/souvenirs";
+const SHOP_PATH         = "tokyo2026disney/shopping";
+const SVR_PATH          = "tokyo2026disney/souvenirs";
+const MISSION_NOTES_PATH = "tokyo2026disney/missionNotes";
 
 // ─── App State ────────────────────────────────────────────────────
 
@@ -1645,6 +1663,11 @@ function initFirebase() {
       allExpenses = Object.entries(data).map(([key, val]) => ({ ...val, _key: key }))
         .sort((a, b) => a.timestamp - b.timestamp);
       renderExpenses();
+    });
+    db.ref(MISSION_NOTES_PATH).on("value", snap => {
+      allMissionNotes = snap.val() || {};
+      loadMissionNotesForCurrentPerson();
+      if (missionAdminMode) renderMissionAdmin();
     });
     firebaseReady = true;
   } catch (e) {
@@ -1879,7 +1902,8 @@ function switchTab(tab) {
   } else {
     document.getElementById("app-content").scrollTop = 0;
   }
-  if (tab === "guide") renderGuide();
+  if (tab === "guide")   renderGuide();
+  if (tab === "mission") renderMissionUI();
 }
 
 function scrollToTodayCard() {
@@ -3415,11 +3439,16 @@ function calcJPY() {
   document.getElementById("fx-jpy").value = twd ? jpy : "";
 }
 
-// ─── Mission Checkboxes + Notes ──────────────────────────────────
-const MISSION_KEY       = "tokyo2026disney-mission-v1";
-const MISSION_NOTES_KEY = "tokyo2026disney-mission-notes-v1";
-let missionDone  = new Set(JSON.parse(localStorage.getItem(MISSION_KEY)       || "[]"));
-let missionNotes = JSON.parse(localStorage.getItem(MISSION_NOTES_KEY) || "{}");
+// ─── Mission: Firebase Notes + Admin View ────────────────────────
+const MISSION_KEY    = "tokyo2026disney-mission-v1";
+const MISSION_LABELS = ["最喜歡的食物","最難以忘憷的回憶","最印象深刻的同伴","最珍賞的同伴","五張相片傳相調組"];
+
+let missionDone      = new Set(JSON.parse(localStorage.getItem(MISSION_KEY) || "[]"));
+let missionNotes     = {};   // 當前選擇者的答案
+let allMissionNotes  = {};   // 所有人的答案（Firebase）
+let missionAdminMode = false;
+let _missionTapCount = 0;
+let _missionTapTimer = null;
 
 function toggleMission(id) {
   missionDone.has(id) ? missionDone.delete(id) : missionDone.add(id);
@@ -3431,7 +3460,6 @@ function openMissionNote(id) {
   const el = document.querySelector(`.mission-item[data-mid="${id}"]`);
   if (!el) return;
   const isOpen = el.classList.contains("note-open");
-  // 先關掉其他已開啟的
   document.querySelectorAll(".mission-item.note-open").forEach(other => {
     saveMissionNote(Number(other.dataset.mid));
     other.classList.remove("note-open");
@@ -3446,9 +3474,16 @@ function saveMissionNote(id) {
   const ta = document.getElementById("mission-ta-" + id);
   if (!ta) return;
   const val = ta.value;
-  if (val.trim()) missionNotes[id] = val;
-  else delete missionNotes[id];
-  localStorage.setItem(MISSION_NOTES_KEY, JSON.stringify(missionNotes));
+  const name = getCheckName();
+  if (val.trim()) {
+    missionNotes[id] = val;
+    if (firebaseReady && name)
+      firebase.database().ref(MISSION_NOTES_PATH + "/" + name + "/" + id).set(val);
+  } else {
+    delete missionNotes[id];
+    if (firebaseReady && name)
+      firebase.database().ref(MISSION_NOTES_PATH + "/" + name + "/" + id).remove();
+  }
   updateMissionPreview(id);
 }
 
@@ -3459,19 +3494,92 @@ function updateMissionPreview(id) {
   preview.textContent = note ? "💬 " + note : "";
 }
 
+function loadMissionNotesForCurrentPerson() {
+  const name = getCheckName();
+  missionNotes = (name && allMissionNotes[name]) ? { ...allMissionNotes[name] } : {};
+  renderMissionChecks();
+}
+
+function onMissionTitleTap() {
+  _missionTapCount++;
+  clearTimeout(_missionTapTimer);
+  if (_missionTapCount >= 5) {
+    _missionTapCount = 0;
+    missionAdminMode = !missionAdminMode;
+    renderMissionAdmin();
+  } else {
+    _missionTapTimer = setTimeout(() => { _missionTapCount = 0; }, 800);
+  }
+}
+
+function renderMissionNameBar() {
+  const bar = document.getElementById("mission-name-bar");
+  if (!bar) return;
+  const name = getCheckName();
+  if (!name) {
+    bar.innerHTML = `<div class="mission-no-name">👆 請先在「清單」Tab 選擇你的名字，再填寫答案</div>`;
+    return;
+  }
+  const avatar = MEMBERS.find(m => m.name === name)?.avatar || "👤";
+  bar.innerHTML = `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--pink);color:white;border-radius:20px;padding:5px 12px;font-size:13px;font-weight:600;margin-bottom:10px">${avatar} ${name} 的答案</div>`;
+}
+
+function renderMissionAdmin() {
+  const view = document.getElementById("mission-admin-view");
+  if (!view) return;
+  if (!missionAdminMode) { view.style.display = "none"; return; }
+  view.style.display = "block";
+
+  const responded = MEMBERS.filter(m => allMissionNotes[m.name]);
+  const pending   = MEMBERS.filter(m => !allMissionNotes[m.name]);
+
+  let html = `<div class="mission-section-title" onclick="onMissionTitleTap()" style="cursor:pointer;user-select:none">👀 所有人的回覆（${responded.length}/${MEMBERS.length} 人已填）</div>`;
+
+  if (responded.length === 0) {
+    html += `<div style="text-align:center;padding:20px;color:var(--text-3);font-size:13px">還沒有人填寫答案</div>`;
+  } else {
+    responded.forEach(m => {
+      const notes = allMissionNotes[m.name] || {};
+      html += `<div class="mission-card" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px 8px;font-size:14px;font-weight:800;border-bottom:1px solid #f5e0e6">
+          <span>${m.avatar}</span><span>${m.name}</span>
+        </div>`;
+      MISSION_LABELS.forEach((label, i) => {
+        const ans = notes[i + 1];
+        html += `<div class="admin-q-item">
+          <div class="admin-q-num">${i + 1}</div>
+          <div class="admin-q-text">${ans ? ans : '<span class="admin-empty">（未填）</span>'}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  if (pending.length > 0) {
+    html += `<div style="font-size:12px;color:var(--text-3);margin-top:4px;padding:0 2px;line-height:1.8">尚未填寫：${pending.map(m => m.avatar + m.name).join("、")}</div>`;
+  }
+
+  view.innerHTML = html;
+}
+
+function renderMissionUI() {
+  renderMissionNameBar();
+  renderMissionChecks();
+  if (missionAdminMode) renderMissionAdmin();
+}
+
 function renderMissionChecks() {
   document.querySelectorAll(".mission-item[data-mid]").forEach(el => {
     el.classList.toggle("done", missionDone.has(Number(el.dataset.mid)));
   });
-  // 還原已儲存的筆記內容
-  Object.entries(missionNotes).forEach(([id, text]) => {
+  [1, 2, 3, 4, 5].forEach(id => {
     const ta = document.getElementById("mission-ta-" + id);
-    if (ta) ta.value = text;
-    updateMissionPreview(Number(id));
+    if (ta) ta.value = missionNotes[id] || "";
+    updateMissionPreview(id);
   });
 }
 
-document.addEventListener("DOMContentLoaded", renderMissionChecks);
+document.addEventListener("DOMContentLoaded", renderMissionUI);
 
 </script>
 
