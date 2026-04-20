@@ -1518,6 +1518,7 @@ const DB_PATH  = "tokyo2026disney/meeting";
 const MSG_PATH = "tokyo2026disney/messages";
 const EXP_PATH  = "tokyo2026disney/expenses";
 const SHOP_PATH = "tokyo2026disney/shopping";
+const SVR_PATH  = "tokyo2026disney/souvenirs";
 
 // ─── App State ────────────────────────────────────────────────────
 
@@ -1546,6 +1547,7 @@ let editingCheckId     = null;
 const CUSTOM_CHECK_KEY  = "tokyo2026disney-custom-check-v1";
 const SHOPPING_KEY      = "tokyo2026disney-shopping-v1";
 const SHOPPING_INIT_KEY = "tokyo2026disney-shopping-init-v1";
+const SOUVENIR_KEY      = "tokyo2026disney-souvenir-v1";
 const FONT_KEY          = "tokyo2026disney-font-size";
 
 const PRESET_SHOPPING = [
@@ -1573,10 +1575,14 @@ if (!localStorage.getItem(SHOPPING_INIT_KEY)) {
   shoppingItems = shoppingItems.filter(s => !REMOVED_PRESETS.some(kw => s.text.includes(kw)));
   if (shoppingItems.length !== before) localStorage.setItem(SHOPPING_KEY, JSON.stringify(shoppingItems));
 }
+let souvenirItems         = JSON.parse(localStorage.getItem(SOUVENIR_KEY) || "[]");
 let showCheckInput        = false;
 let showShoppingInput     = false;
+let showSouvenirInput     = false;
 let checklistSubTab       = "shopping";
 let pendingShoppingPhotos = [];
+let pendingSouvenirPhotos = [];
+let editingSouvenirId     = null;
 
 // ─── Firebase Init ────────────────────────────────────────────────
 
@@ -2137,14 +2143,15 @@ function renderItinerary() {
   scrollToTodayCard();
 }
 
-// ─── Render: Checklist (打包 + 購物 sub-tabs) ─────────────────────
+// ─── Render: Checklist (打包 + 購物 + 伴手禮 sub-tabs) ───────────
 
 function renderChecklist() {
   loadPersonChecked();
-  const p = checklistSubTab === "packing";
+  const t = checklistSubTab;
   const checkHelp = helpCard('checklist', '📋 清單 — 怎麼用', [
     '【🎒 打包】出發前逐項打勾確認，避免忘帶東西',
-    '【🛍️ 購物】記錄想買的伴手禮，買了就打勾',
+    '【🛍️ 購物】記錄想買的東西，買了就打勾',
+    '【🎁 伴手禮】記錄要帶回去送人的禮物，買了就打勾',
     '右下角 ＋ 可以自行新增項目',
     '打勾紀錄存在你自己的手機，不影響他人'
   ]);
@@ -2162,11 +2169,14 @@ function renderChecklist() {
     : '<div class="person-greeting" style="color:#c94b72;font-weight:600;">↑ 選擇一下這是誰的手機</div>';
   document.getElementById("tab-checklist").innerHTML = checkHelp + personBar + greeting + `
     <div class="checklist-tabs">
-      <button class="checklist-tab-btn \${p ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
-      <button class="checklist-tab-btn \${p ? "" : "active"}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
+      <button class="checklist-tab-btn \${t === "packing"  ? "active" : ""}" onclick="switchChecklistTab('packing')">🎒 打包</button>
+      <button class="checklist-tab-btn \${t === "shopping" ? "active" : ""}" onclick="switchChecklistTab('shopping')">🛍️ 購物</button>
+      <button class="checklist-tab-btn \${t === "souvenir" ? "active" : ""}" onclick="switchChecklistTab('souvenir')">🎁 伴手禮</button>
     </div>
     <div id="tab-checklist-content"></div>`;
-  if (p) renderPacking(); else renderShopping();
+  if (t === "packing") renderPacking();
+  else if (t === "souvenir") renderSouvenir();
+  else renderShopping();
 }
 
 function switchChecklistTab(sub) {
@@ -2536,6 +2546,208 @@ function renderShopping() {
     setTimeout(() => document.getElementById("shop-input")?.focus(), 50);
   } else {
     html += `<button class="add-trigger" style="border-color:#f0d4dc;color:var(--pink)" onclick="showShoppingInput=true;renderShopping()">＋ 新增購物項目</button>`;
+  }
+
+  document.getElementById("tab-checklist-content").innerHTML = html;
+}
+
+// ─── Souvenir List ────────────────────────────────────────────────
+
+function _svrRef(key) { return firebase.database().ref(SVR_PATH + (key ? "/" + key : "")); }
+function _svrSave() { localStorage.setItem(SOUVENIR_KEY, JSON.stringify(souvenirItems)); }
+
+function addSouvenir(text, location = "") {
+  if (!text.trim()) { showSouvenirInput = false; pendingSouvenirPhotos = []; renderSouvenir(); return; }
+  const item = { id: Date.now(), text: text.trim(), bought: false,
+                 location: (location || "").trim(), photos: pendingSouvenirPhotos.slice() };
+  souvenirItems.push(item); _svrSave();
+  showSouvenirInput = false; pendingSouvenirPhotos = [];
+  renderSouvenir();
+}
+function toggleSouvenir(id) {
+  const item = souvenirItems.find(i => i.id === id);
+  if (!item) return;
+  item.bought = !item.bought; _svrSave(); renderSouvenir();
+}
+function deleteSouvenir(id) {
+  souvenirItems = souvenirItems.filter(i => i.id !== id); _svrSave(); renderSouvenir();
+}
+function startEditSouvenir(id) {
+  editingSouvenirId = id;
+  renderSouvenir();
+  setTimeout(() => document.getElementById("svr-edit-" + id)?.focus(), 50);
+}
+function saveEditSouvenir(id) {
+  const val = (document.getElementById("svr-edit-" + id)?.value || "").trim();
+  if (!val) return;
+  const item = souvenirItems.find(i => i.id === id);
+  if (!item) return;
+  item.text = val;
+  item.location = (document.getElementById("svr-loc-edit-" + id)?.value || "").trim();
+  editingSouvenirId = null;
+  _svrSave(); renderSouvenir();
+}
+function cancelEditSouvenir() {
+  editingSouvenirId = null;
+  renderSouvenir();
+}
+
+function openPendingSouvenirPhotoPicker() {
+  const slots = 3 - pendingSouvenirPhotos.length;
+  if (slots <= 0) return;
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*"; input.multiple = true;
+  input.onchange = async e => {
+    const files = Array.from(e.target.files).slice(0, slots);
+    for (const file of files) {
+      const data = await compressImage(file);
+      pendingSouvenirPhotos.push({ data });
+    }
+    renderSouvenir();
+  };
+  input.click();
+}
+function deletePendingSouvenirPhoto(idx) {
+  pendingSouvenirPhotos.splice(idx, 1);
+  renderSouvenir();
+}
+
+function openSouvenirPhotoPicker(itemId) {
+  const input = document.createElement("input");
+  input.type = "file"; input.accept = "image/*"; input.multiple = true;
+  input.onchange = async e => {
+    const item = souvenirItems.find(s => s.id === itemId);
+    if (!item) return;
+    const existing = item.photos || [];
+    const slots = 3 - existing.length;
+    if (slots <= 0) return;
+    const files = Array.from(e.target.files).slice(0, slots);
+    const photos = [...existing];
+    for (const f of files) photos.push({ data: await compressImage(f) });
+    if (firebaseReady && item._key) {
+      _svrRef(item._key).update({ photos });
+    } else {
+      item.photos = photos; _svrSave(); renderSouvenir();
+    }
+  };
+  input.click();
+}
+function deleteSouvenirPhoto(itemId, photoIdx) {
+  const item = souvenirItems.find(s => s.id === itemId);
+  if (!item) return;
+  const photos = [...(item.photos || [])];
+  photos.splice(photoIdx, 1);
+  if (firebaseReady && item._key) {
+    _svrRef(item._key).update({ photos });
+  } else {
+    item.photos = photos; _svrSave(); renderSouvenir();
+  }
+}
+function viewSouvenirPhoto(itemId, photoIdx) {
+  const item = souvenirItems.find(s => s.id === itemId);
+  if (!item?.photos?.[photoIdx]) return;
+  const ov = document.createElement("div");
+  ov.className = "photo-overlay";
+  ov.onclick = () => ov.remove();
+  ov.innerHTML = `
+    <img src="${item.photos[photoIdx].data}" onclick="event.stopPropagation()">
+    <button class="photo-overlay-close" onclick="this.closest('.photo-overlay').remove()">✕</button>`;
+  document.body.appendChild(ov);
+}
+
+// ─── Render: Souvenir ─────────────────────────────────────────────
+
+function renderSouvenir() {
+  let html = "";
+  const boughtCount = souvenirItems.filter(s => s.bought).length;
+  html += `<div class="sec-title">🎁 伴手禮清單 <span style="font-weight:400;color:var(--text-3);font-size:12px;margin-left:6px">${boughtCount}/${souvenirItems.length}</span></div>`;
+  html += `<div style="font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.6">記錄想買回去送人的伴手禮，附上照片與購買地點 📍</div>`;
+
+  if (souvenirItems.length === 0 && !showSouvenirInput) {
+    html += `<div style="text-align:center;padding:20px 0 8px;color:var(--text-3);font-size:13px">還沒有伴手禮項目 🎁</div>`;
+  }
+
+  souvenirItems.forEach(s => {
+    const photos = s.photos || [];
+    if (s.id === editingSouvenirId) {
+      html += `
+        <div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px">
+          <input class="list-edit-input" id="svr-edit-${s.id}" value="${s.text.replace(/"/g,'&quot;')}"
+                 placeholder="伴手禮名稱"
+                 onkeydown="if(event.key==='Escape')cancelEditSouvenir()">
+          <input class="list-edit-input" id="svr-loc-edit-${s.id}" value="${(s.location||'').replace(/"/g,'&quot;')}"
+                 placeholder="📍 購買地點（選填）"
+                 onkeydown="if(event.key==='Enter')saveEditSouvenir(${s.id});if(event.key==='Escape')cancelEditSouvenir()">
+          <div style="display:flex;gap:6px">
+            <button class="list-save-btn" style="flex:1" onclick="saveEditSouvenir(${s.id})">✓ 儲存</button>
+            <button class="del-btn" onclick="cancelEditSouvenir()">✕</button>
+          </div>
+          <button class="del-btn" style="width:100%;border-radius:10px;padding:8px 0;font-size:13px;color:#e55;border-color:#fcc"
+                  onclick="if(confirm('確定刪除此項目？'))deleteSouvenir(${s.id})">🗑 刪除此項目</button>
+        </div>`;
+    } else {
+      const thumbsHtml = photos.length
+        ? `<div class="shop-photos">
+            ${photos.map((p, i) => `
+              <div class="shop-thumb-wrap">
+                <img class="shop-thumb" src="${p.data}" onclick="event.stopPropagation();viewSouvenirPhoto(${s.id},${i})">
+                <button class="shop-thumb-del" onclick="event.stopPropagation();deleteSouvenirPhoto(${s.id},${i})">✕</button>
+              </div>`).join("")}
+            ${photos.length < 3
+              ? `<button class="shop-photo-add" onclick="event.stopPropagation();openSouvenirPhotoPicker(${s.id})">📷</button>`
+              : ""}
+          </div>`
+        : `<button class="shop-photo-add-inline" onclick="event.stopPropagation();openSouvenirPhotoPicker(${s.id})">📷 加照片</button>`;
+
+      html += `
+        <div class="list-item ${s.bought ? "done" : ""}" onclick="toggleSouvenir(${s.id})">
+          <div class="list-check" style="align-self:flex-start;margin-top:2px"><span class="list-check-mark">✓</span></div>
+          <div class="shop-content">
+            <span class="list-label">${s.text}</span>
+            ${s.location ? `<div class="shop-location">📍 ${s.location}</div>` : ""}
+            ${thumbsHtml}
+          </div>
+          <div class="shop-actions">
+            <button class="edit-btn" onclick="event.stopPropagation();startEditSouvenir(${s.id})">✏️</button>
+          </div>
+        </div>`;
+    }
+  });
+
+  if (showSouvenirInput) {
+    const pendingThumbsHtml = pendingSouvenirPhotos.length
+      ? `<div class="shop-photos" style="margin:6px 0 2px">
+          ${pendingSouvenirPhotos.map((p, i) => `
+            <div class="shop-thumb-wrap">
+              <img class="shop-thumb" src="${p.data}">
+              <button class="shop-thumb-del" onclick="deletePendingSouvenirPhoto(${i})">✕</button>
+            </div>`).join("")}
+          ${pendingSouvenirPhotos.length < 3
+            ? `<button class="shop-photo-add" onclick="openPendingSouvenirPhotoPicker()">📷</button>`
+            : ""}
+        </div>`
+      : "";
+    html += `
+      <div class="add-row add-row-col">
+        <input id="svr-input" type="text" placeholder="伴手禮名稱..."
+               onkeydown="if(event.key==='Enter')document.getElementById('svr-loc-input').focus()">
+        <input id="svr-loc-input" type="text" placeholder="📍 可能購買的地點（選填）"
+               onkeydown="if(event.key==='Enter')addSouvenir(document.getElementById('svr-input').value,this.value)">
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          ${pendingSouvenirPhotos.length === 0
+            ? `<button class="shop-photo-add-inline" onclick="openPendingSouvenirPhotoPicker()">📷 加照片</button>`
+            : ""}
+          ${pendingThumbsHtml}
+        </div>
+        <div class="add-row-buttons">
+          <button class="add-row-btn" style="flex:1"
+                  onclick="addSouvenir(document.getElementById('svr-input').value,document.getElementById('svr-loc-input').value)">新增</button>
+          <button class="del-btn" onclick="showSouvenirInput=false;pendingSouvenirPhotos=[];renderSouvenir()">✕</button>
+        </div>
+      </div>`;
+    setTimeout(() => document.getElementById("svr-input")?.focus(), 50);
+  } else {
+    html += `<button class="add-trigger" style="border-color:#f0d4dc;color:var(--pink)" onclick="showSouvenirInput=true;renderSouvenir()">＋ 新增伴手禮項目</button>`;
   }
 
   document.getElementById("tab-checklist-content").innerHTML = html;
