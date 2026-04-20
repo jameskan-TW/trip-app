@@ -1145,8 +1145,21 @@
     .mission-item {
       display: flex; align-items: flex-start; gap: 12px;
       padding: 14px 16px; border-bottom: 1px solid #f5e0e6;
+      cursor: pointer; user-select: none; transition: background 0.15s;
     }
+    .mission-item:active { background: #fef0f4; }
     .mission-item:last-child { border-bottom: none; }
+    .mission-item.done { opacity: 0.5; }
+    .mission-item.done .mission-text { text-decoration: line-through; color: var(--text-3); }
+    .mission-item.done .mission-num { background: var(--green); }
+    .mission-check {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid #f0b8c8; margin-top: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: white;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .mission-item.done .mission-check { background: var(--green); border-color: var(--green); }
     .mission-num {
       width: 28px; height: 28px; border-radius: 50%;
       background: var(--pink); color: white;
@@ -1237,25 +1250,30 @@
     </div>
     <div class="mission-section-title">📋 五項小任務</div>
     <div class="mission-card">
-      <div class="mission-item">
+      <div class="mission-item" data-mid="1" onclick="toggleMission(1)">
         <div class="mission-num">1</div>
         <div class="mission-text">🍜 分享這次相調最喜歡的食物</div>
+        <div class="mission-check">✓</div>
       </div>
-      <div class="mission-item">
+      <div class="mission-item" data-mid="2" onclick="toggleMission(2)">
         <div class="mission-num">2</div>
         <div class="mission-text">✨ 分享這次相調裡最難以忘憷的回憶<br><span style="font-size:11px;color:#aaa;">（並且在回程的飛機上，跟同伴分享！）</span></div>
+        <div class="mission-check">✓</div>
       </div>
-      <div class="mission-item">
+      <div class="mission-item" data-mid="3" onclick="toggleMission(3)">
         <div class="mission-num">3</div>
         <div class="mission-text">😄 分享這次相調中，讓你最印象深刻的同伴<br><span style="font-size:11px;color:#aaa;">（搞笑的/生氣的/迷路的都可以分享！）</span></div>
+        <div class="mission-check">✓</div>
       </div>
-      <div class="mission-item">
+      <div class="mission-item" data-mid="4" onclick="toggleMission(4)">
         <div class="mission-num">4</div>
         <div class="mission-text">💞 分享這次相調中，讓你最珍賞的同伴</div>
+        <div class="mission-check">✓</div>
       </div>
-      <div class="mission-item">
+      <div class="mission-item" data-mid="5" onclick="toggleMission(5)">
         <div class="mission-num">5</div>
         <div class="mission-text">📸 依照上面內容，一人傳五張相片給相調組</div>
+        <div class="mission-check">✓</div>
       </div>
     </div>
     <div class="mission-photo-tip">
@@ -3152,6 +3170,24 @@ function calcJPY() {
   var jpy = (twd / fxRate).toFixed(0);
   document.getElementById("fx-jpy").value = twd ? jpy : "";
 }
+
+// ─── Mission Checkboxes ───────────────────────────────────────────
+const MISSION_KEY = "tokyo2026disney-mission-v1";
+let missionDone = new Set(JSON.parse(localStorage.getItem(MISSION_KEY) || "[]"));
+
+function toggleMission(id) {
+  missionDone.has(id) ? missionDone.delete(id) : missionDone.add(id);
+  localStorage.setItem(MISSION_KEY, JSON.stringify([...missionDone]));
+  renderMissionChecks();
+}
+
+function renderMissionChecks() {
+  document.querySelectorAll(".mission-item[data-mid]").forEach(el => {
+    el.classList.toggle("done", missionDone.has(Number(el.dataset.mid)));
+  });
+}
+
+document.addEventListener("DOMContentLoaded", renderMissionChecks);
 
 </script>
 
